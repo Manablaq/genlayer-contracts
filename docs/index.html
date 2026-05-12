@@ -158,6 +158,8 @@
     .stat-grid { grid-template-columns: 1fr 1fr; }
     .sec { padding: 3rem 1.5rem; }
     footer { padding: 2rem 1.5rem; flex-direction: column; align-items: flex-start; }
+    .blob { display: none; }
+    .fade { opacity: 1; transform: none; }
   }
 </style>
 </head>
@@ -459,8 +461,13 @@ self.pulse = <span class="str">"never"</span>
 <script>
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); } });
-  }, { threshold: 0.08 });
+  }, { threshold: 0 });
   document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+
+  // Fallback: show all fades after 1 second in case observer fails
+  setTimeout(() => {
+    document.querySelectorAll('.fade').forEach(el => el.classList.add('in'));
+  }, 1000);
 </script>
 </body>
 </html>
