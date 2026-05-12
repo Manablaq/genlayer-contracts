@@ -469,12 +469,13 @@ You may see more than 5 validators appearing in transaction logs. This is normal
 | JSON serialization | `json.dumps(..., sort_keys=True)` | `json.dumps()` without sort |
 | Web + AI consensus | `prompt_comparative` | `run_nondet_unsafe` |
 | Booleans in state | `"true"` / `"false"` strings | `bool` type |
+| Integers in state | `str(int)` — `"100"`, `"1"` | `int` type |
 | Get caller address | Constructor parameter | `gl.message.sender_address` in `__init__` |
 | Validate in constructor | `assert` | `gl.vm.UserError` |
 | Validate in write methods | `gl.vm.UserError` or `assert` | — |
 | Shared fetch logic | Module-level function | Duplicated closures |
 | AI output | Specific JSON schema in prompt | Free-form text |
-| Closure errors | `try/except` returning error JSON | Unhandled exceptions |
+| Closures in loops | Default argument binding (`u=url`) | Bare variable capture |
 
 ---
 
@@ -489,6 +490,7 @@ Confirmed platform limitations as of the time of writing. These are not bugs in 
 | `run_nondet_unsafe` fails with web fetching | Cannot combine unsafe nondeterminism with web calls | Use `prompt_comparative` |
 | Private APIs incompatible with consensus | Validators cannot independently replicate auth-required calls | Use public APIs only |
 | `gl.message.sender_address` in `__init__` causes deploy failure | Contract fails to deploy | Pass caller address as constructor parameter |
+| Leader rotation shows more than 5 validators | Looks alarming in logs | Normal behavior — not a bug |
 
 ---
 
