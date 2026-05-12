@@ -6,6 +6,19 @@
 
 ---
 
+## Key Concepts
+
+Before diving in, here's a plain-English summary of the GenLayer-specific terms used throughout this guide:
+
+- **Intelligent Contract** — a smart contract that can fetch live data from the internet and use AI to process it, all on-chain
+- **Validator** — a node on the GenLayer network that independently runs your contract's fetch logic to verify the result
+- **Consensus** — multiple validators must agree on the result before it gets stored on-chain
+- **`prompt_comparative`** — a built-in function that runs your fetch code across all validators and uses AI to decide if they all got the same answer
+- **Equivalence string** — the rule you write to tell the AI what counts as "the same" result between two validators
+- **GenLayer Studio** — the web-based IDE where you write, deploy, and test Intelligent Contracts
+
+---
+
 ## Table of Contents
 
 1. [Web Data Fetching](#1-web-data-fetching)
