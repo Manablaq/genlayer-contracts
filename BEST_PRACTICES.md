@@ -28,10 +28,12 @@ Before diving in, here's a plain-English summary of the GenLayer-specific terms 
 5. [Error Handling](#5-error-handling)
 6. [AI Prompts](#6-ai-prompts)
 7. [Code Organization](#7-code-organization)
-8. [API Compatibility](#8-api-compatibility)
-9. [Studio-Specific Behavior](#9-studio-specific-behavior)
-10. [Quick Reference](#10-quick-reference)
-11. [Known Limitations](#11-known-limitations)
+8. [Working APIs](#8-working-apis)
+9. [API Compatibility](#9-api-compatibility)
+10. [Security](#10-security)
+11. [Studio-Specific Behavior](#11-studio-specific-behavior)
+12. [Quick Reference](#12-quick-reference)
+13. [Known Limitations](#13-known-limitations)
 
 ---
 
@@ -424,7 +426,56 @@ class MultiKeyVault(gl.Contract):
 
 ---
 
-## 8. API Compatibility
+## 8. Working APIs
+
+These APIs were tested and confirmed working on GenLayer Studio. They are fully public and require no authentication.
+
+### Binance Public Ticker
+
+```python
+# 10 assets used in CryptoOracle: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT,
+# ADAUSDT, DOGEUSDT, LINKUSDT, MATICUSDT, AVAXUSDT
+url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"
+raw = gl.nondet.web.render(url, mode="text")
+data = json.loads(raw)
+price = float(data["lastPrice"])
+change = float(data["priceChangePercent"])
+```
+
+Returns: `lastPrice`, `priceChangePercent`, `highPrice`, `lowPrice`, `openPrice`, `volume`, `quoteVolume`
+
+### Open-Meteo Weather
+
+```python
+# 13 cities in WeatherOracle: London, New York, Lagos, Tokyo, Paris, Dubai,
+# Singapore, Nairobi, Port Harcourt, Abuja, Berlin, Sydney, Toronto
+url = (
+    f"https://api.open-meteo.com/v1/forecast"
+    f"?latitude={lat}&longitude={lon}"
+    f"&current=temperature_2m,relative_humidity_2m,"
+    f"wind_speed_10m,precipitation,weathercode"
+    f"&timezone=auto"
+)
+raw     = gl.nondet.web.render(url, mode="text")
+current = json.loads(raw)["current"]
+```
+
+Returns: `temperature_2m`, `relative_humidity_2m`, `wind_speed_10m`, `precipitation`, `weathercode`, `current_units`
+
+### Hacker News Firebase
+
+```python
+HN_API = "https://hacker-news.firebaseio.com/v0"
+
+# 3 feeds used in SocialOracle: top, new, best
+ids_raw   = gl.nondet.web.render(f"{HN_API}/topstories.json", mode="text")
+ids       = json.loads(ids_raw)
+story_raw = gl.nondet.web.render(f"{HN_API}/item/{ids[0]}.json", mode="text")
+story     = json.loads(story_raw)
+# Returns: id, title, score, descendants (comments), url, by (author)
+```
+
+## 9. API Compatibility
 
 ### Only use public APIs
 
@@ -450,7 +501,87 @@ Any API behind a login or session wall
 
 ---
 
-## 9. Studio-Specific Behavior
+## 10. Security
+
+Security patterns from building MultiKeyVault — a multi-secret vault with access control, rate limiting, audit logging, and emergency wipe.
+
+### Access control
+
+Pass the owner address as a constructor parameter. Always validate address format.
+
+```python
+def is_valid_address(address: str) -> bool:
+    if not address: return False
+    if not address.startswith("0x"): return False
+    if len(address) != 42: return False
+    valid_chars = "0123456789abcdefABCDEF"
+    for char in address[2:]:
+        if char not in valid_chars: return False
+    return True
+
+def __init__(self, owner_address: str):
+    assert is_valid_address(owner_address), "Invalid owner address."
+    self.owner           = owner_address
+    self.allowed_callers = json.dumps([owner_address])
+
+def _is_owner(self, address: str) -> bool:
+    return address == self.owner
+
+@gl.public.write
+def add_key(self, name: str, value: str, owner_address: str) -> typing.Any:
+    assert self._is_owner(owner_address), "Access denied. Only the owner can add keys."
+```
+
+### Rate limiting
+
+Implement per-key call limits at the contract level.
+
+```python
+counts = json.loads(self.call_counts)
+count  = counts.get(key_name, 0)
+limit  = int(self.rate_limit)
+
+if count >= limit:
+    self.last_response = json.dumps({
+        "error": "Rate limit reached for '" + key_name + "'.",
+        "status": "rate_limited"
+    })
+    return
+
+# After successful fetch:
+counts[key_name]  = count + 1
+self.call_counts  = json.dumps(counts, sort_keys=True)
+```
+
+### Audit logging
+
+Log every action. Cap at 50 entries to control state size growth.
+
+```python
+def _log_call(self, action: str, detail: str) -> None:
+    log = json.loads(self.audit_log)
+    log.append({"action": action, "detail": detail})
+    if len(log) > 50:
+        log = log[-50:]  # Keep only the latest 50 entries
+    self.audit_log = json.dumps(log)
+```
+
+### Emergency wipe
+
+Clear all secrets and lock the vault in a single atomic transaction.
+
+```python
+@gl.public.write
+def emergency_wipe(self, owner_address: str) -> typing.Any:
+    assert self._is_owner(owner_address), "Access denied."
+    self.secrets     = "{}"
+    self.call_counts = "{}"
+    self.is_paused   = "true"
+    self.key_version = str(int(self.key_version) + 1)
+    self._log_call("EMERGENCY_WIPE", "all keys cleared and vault locked")
+```
+
+## 11. Studio-Specific Behavior
 
 ### Testing order matters
 
@@ -473,7 +604,7 @@ You may see more than 5 validators appearing in transaction logs. This is normal
 
 ---
 
-## 10. Quick Reference
+## 12. Quick Reference
 
 | Situation | Use This | Not This |
 |---|---|---|
@@ -492,7 +623,7 @@ You may see more than 5 validators appearing in transaction logs. This is normal
 
 ---
 
-## 11. Known Limitations
+## 13. Known Limitations
 
 Confirmed platform limitations as of the time of writing. These are not bugs in your contract.
 
