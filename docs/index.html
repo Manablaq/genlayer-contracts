@@ -201,6 +201,17 @@
     <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank" class="btn-primary">↗ GitHub Repo</a>
     <a href="https://dev.to/albert__crypt/genlayer-studio-7-things-that-break-and-how-to-fix-them-ni4" target="_blank" class="btn-outline">↗ DEV.to Post</a>
   </div>
+
+  <!-- KEY CONCEPTS -->
+  <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:1.5rem 2rem;margin-bottom:2.5rem;max-width:900px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:#8b5cf6;margin-bottom:1rem;">// Quick Glossary</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem 2rem;">
+      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">Intelligent Contract</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">A smart contract that can fetch live web data and use AI — all on-chain.</p></div>
+      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">Validator</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">A network node that independently runs your fetch logic to verify results.</p></div>
+      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">prompt_comparative</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">Runs your fetch across all validators and uses AI to check they got the same answer.</p></div>
+      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">Equivalence string</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">The rule you write to define what counts as "the same" result between validators.</p></div>
+    </div>
+  </div>
   <div class="stat-grid">
     <div class="stat-card">
       <div class="stat-label">Bugs Documented</div>
@@ -234,11 +245,11 @@
   <p class="sec-p">None of these produce a useful error message. Every GenLayer developer hits them. All five were discovered building the four oracle contracts.</p>
 
   <div class="bug-grid">
-    <div class="bug-item"><div class="bug-num">01</div><div class="bug-title">web.get() stores nothing</div><p class="bug-desc">Transaction finalizes. No error thrown. State is always an empty string. Use web.render() exclusively.</p></div>
-    <div class="bug-item"><div class="bug-num">02</div><div class="bug-title">TreeMap doesn't persist</div><p class="bug-desc">Works in local testing. State vanishes after every transaction on Studio. Use str + JSON.</p></div>
-    <div class="bug-item"><div class="bug-num">03</div><div class="bug-title">sender_address kills deploy</div><p class="bug-desc">gl.message.sender_address in __init__ causes a runtime error at deploy time.</p></div>
-    <div class="bug-item"><div class="bug-num">04</div><div class="bug-title">run_nondet_unsafe + web</div><p class="bug-desc">Combining run_nondet_unsafe with any web fetch fails at runtime. Use prompt_comparative.</p></div>
-    <div class="bug-item"><div class="bug-num">05</div><div class="bug-title">gl.vm.UserError in __init__</div><p class="bug-desc">Raised inside __init__ causes deploy execution failure. Use assert instead.</p></div>
+    <div class="bug-item"><div class="bug-num">01</div><div class="bug-title">web.get() stores nothing</div><p class="bug-desc">You call the API, it succeeds, no error is thrown — but your contract stores an empty string every time. Use web.render() instead.</p></div>
+    <div class="bug-item"><div class="bug-num">02</div><div class="bug-title">TreeMap doesn't persist</div><p class="bug-desc">TreeMap works fine when testing locally but loses all data after every transaction on Studio. Use a plain string with JSON instead.</p></div>
+    <div class="bug-item"><div class="bug-num">03</div><div class="bug-title">sender_address kills deploy</div><p class="bug-desc">Using gl.message.sender_address inside __init__ crashes the contract at deploy time — not at runtime. Pass the address as a parameter instead.</p></div>
+    <div class="bug-item"><div class="bug-num">04</div><div class="bug-title">run_nondet_unsafe + web</div><p class="bug-desc">Combining run_nondet_unsafe with any web fetch fails silently at runtime. Use prompt_comparative for all web and AI operations.</p></div>
+    <div class="bug-item"><div class="bug-num">05</div><div class="bug-title">gl.vm.UserError in __init__</div><p class="bug-desc">Raising gl.vm.UserError inside __init__ prevents the contract from deploying at all. Use assert for all constructor validation.</p></div>
   </div>
 
   <h3>Bug 01 — web.get() silent failure</h3>
@@ -290,9 +301,10 @@ fresh = gl.eq_principle.<span class="fn">prompt_comparative</span>(fetch, <span 
 <section class="sec fade" id="patterns">
   <div class="sec-label">// 02 — patterns</div>
   <div class="sec-title">What actually <span style="color:var(--purple)">works.</span></div>
+  <p class="sec-p">These are the coding patterns that made all 4 contracts work reliably on Studio. Each one was discovered through real development — not theory.</p>
 
   <h3>Calibrate your equivalence string</h3>
-  <p>The second argument to <code>prompt_comparative</code> defines what validators consider "equivalent." Write it to match your data's actual volatility — not copied from another contract.</p>
+  <p>When your contract fetches data, multiple validators independently run the same fetch and compare results. The equivalence string is the rule that tells the AI whether two validators got "the same" answer. It must match how volatile your data actually is — a price that moves 1% per second needs a different rule than a weather temperature.</p>
   <div class="feat"><div class="feat-title">CryptoOracle — price data, allow 2% variance</div><div class="feat-desc">"They are equivalent if price values are within 2% and symbol matches."</div></div>
   <div class="feat"><div class="feat-title">WeatherOracle — sensor data, per-field tolerances</div><div class="feat-desc">"They are equivalent if temperature is within 1 degree, humidity within 5%, and wind speed within 3 km/h."</div></div>
   <div class="feat"><div class="feat-title">WeatherOracle forecast — wider tolerance</div><div class="feat-desc">"They are equivalent if temperatures are within 2 degrees and dates match exactly."</div></div>
@@ -430,7 +442,7 @@ self.pulse = <span class="str">"never"</span>
 <section class="sec fade" id="limits">
   <div class="sec-label">// 04 — known limitations</div>
   <div class="sec-title">Platform <span style="color:var(--red)">limits.</span></div>
-  <p class="sec-p">These are confirmed Studio constraints — not bugs in your contract code.</p>
+  <p class="sec-p">These are confirmed issues with GenLayer Studio itself — not mistakes in your contract code. If you hit one of these, the workaround is documented below. Don't spend hours debugging code that isn't broken.</p>
   <ul class="limit-list">
     <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>web.get() + response.body returns empty</strong><small>Silent data loss. No error thrown. Workaround: use web.render() exclusively.</small></div></li>
     <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>TreeMap state does not persist on Studio</strong><small>State lost after every transaction. Workaround: use str fields with JSON serialization.</small></div></li>
