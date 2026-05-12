@@ -3,483 +3,1120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Real bugs, patterns, and fixes from building 4 production Intelligent Contracts on GenLayer Studio. By Albert — GenLayer Builder Program.">
-<meta property="og:title" content="GenLayer Developer Field Guide — by Albert">
-<meta property="og:description" content="Real bugs, patterns, and fixes from building 4 production Intelligent Contracts on GenLayer Studio. What the documentation doesn't tell you.">
+<meta name="description" content="A complete developer guide for building Intelligent Contracts on GenLayer Studio. Real bugs, working APIs, security patterns, and Studio tips from 4 deployed contracts.">
+<meta property="og:title" content="GenLayer Intelligent Contracts — Developer Guide">
+<meta property="og:description" content="Real bugs, working APIs, security, and best practices from 4 deployed GenLayer contracts. By Albert.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://manablaq.github.io/genlayer-contracts">
-<title>GenLayer Developer Field Guide — by Albert</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,700&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>GenLayer Developer Guide — by Albert</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #000000;
-    --bg2: #0d0d0d;
-    --bg3: #080808;
-    --border: #222222;
-    --purple: #8b5cf6;
-    --white: #ffffff;
-    --muted: #888888;
-    --red: #ff4455;
-    --mono: 'JetBrains Mono', monospace;
-    --serif: 'Playfair Display', serif;
-    --sans: 'DM Sans', sans-serif;
-  }
+:root {
+  --bg: #0f0f1a;
+  --sidebar-bg: #0a0a12;
+  --content-bg: #0f0f1a;
+  --card-bg: #13131f;
+  --border: #1e1e38;
+  --border-light: #2a2a45;
+  --purple: #7c3aed;
+  --purple-light: #a78bfa;
+  --purple-dim: rgba(124,58,237,0.12);
+  --text: #e2e2f0;
+  --text-muted: #8888aa;
+  --text-dim: #555570;
+  --code-bg: #06060f;
+  --white: #ffffff;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --sidebar-width: 260px;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:15px; line-height:1.75; }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--purple); }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--bg); color: var(--white); font-family: var(--sans); font-size: 16px; line-height: 1.7; overflow-x: hidden; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+/* ── TOP NAV ─────────────────────────────────────── */
+.topnav {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  height: 56px;
+  background: rgba(10,10,18,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 1.5rem;
+  gap: 1rem;
+}
+.topnav-logo { display:flex; align-items:center; gap:0.6rem; text-decoration:none; flex-shrink:0; }
+.topnav-logo-icon { width:32px; height:32px; background:var(--purple-dim); border:1px solid var(--purple); border-radius:8px; display:flex; align-items:center; justify-content:center; }
+.topnav-logo-icon svg { width:16px; height:16px; }
+.topnav-logo-text { font-size:0.95rem; font-weight:600; color:var(--white); }
+.topnav-logo-text span { color:var(--purple-light); }
+.topnav-badge { font-family:var(--mono); font-size:0.6rem; background:var(--purple-dim); border:1px solid var(--purple); color:var(--purple-light); padding:0.15rem 0.5rem; border-radius:4px; letter-spacing:0.05em; }
+.topnav-spacer { flex:1; }
+.topnav-links { display:flex; gap:1.5rem; align-items:center; }
+.topnav-links a { font-size:0.8rem; color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
+.topnav-links a:hover { color:var(--text); }
+.topnav-links a.active { color:var(--purple-light); }
+.topnav-github { font-size:0.8rem; color:var(--text); background:var(--card-bg); border:1px solid var(--border); padding:0.3rem 0.8rem; border-radius:6px; text-decoration:none; transition:border-color 0.2s; }
+.topnav-github:hover { border-color:var(--purple); }
 
-  /* BLOBS */
-  .blob { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
-  .blob-purple { width: 500px; height: 500px; background: rgba(139,92,246,0.25); top: -150px; right: -100px; }
-  .blob-blue { width: 400px; height: 400px; background: rgba(59,130,246,0.15); bottom: 200px; left: -150px; }
-  .blob-orange { width: 350px; height: 350px; background: rgba(251,146,60,0.12); bottom: -50px; right: 100px; }
+/* ── LAYOUT ──────────────────────────────────────── */
+.layout { display:flex; padding-top:56px; min-height:100vh; }
 
-  /* NAV */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
-    border-bottom: 1px solid #1a1a1a;
-    padding: 0 2rem; height: 56px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-logo { display: flex; align-items: center; gap: 0.6rem; }
-  .nav-icon { width: 32px; height: 32px; border: 1px solid var(--purple); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-  .nav-icon svg { width: 15px; height: 15px; }
-  .nav-brand { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em; }
-  .nav-brand em { font-style: italic; color: var(--purple); }
-  .nav-links { display: flex; gap: 2rem; list-style: none; }
-  .nav-links a { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
-  .nav-links a:hover { color: var(--purple); }
-  .nav-pills { display: flex; gap: 0.5rem; }
-  .pill { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; padding: 0.28rem 0.75rem; border: 1px solid #222; border-radius: 20px; color: #666; text-decoration: none; cursor: pointer; transition: all 0.2s; }
-  .pill.active { background: var(--purple); border-color: var(--purple); color: #fff; }
-  .pill:hover { border-color: var(--purple); color: var(--purple); }
-  .pill.active:hover { color: #fff; }
+/* ── SIDEBAR ─────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  top: 56px; bottom: 0; left: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1.5rem 0 3rem;
+  z-index: 100;
+}
+.sidebar::-webkit-scrollbar { width:3px; }
+.sidebar-section { margin-bottom:1.75rem; padding:0 1rem; }
+.sidebar-label {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  padding:0 0.5rem;
+  margin-bottom:0.4rem;
+}
+.sidebar-link {
+  display:block;
+  font-size:0.82rem;
+  color:var(--text-muted);
+  text-decoration:none;
+  padding:0.35rem 0.5rem;
+  border-radius:5px;
+  transition:all 0.15s;
+  border-left:2px solid transparent;
+}
+.sidebar-link:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+.sidebar-link.active { color:var(--purple-light); background:var(--purple-dim); border-left-color:var(--purple); }
+.sidebar-link.sub { padding-left:1.25rem; font-size:0.78rem; }
 
-  /* HERO */
-  .hero {
-    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
-    padding: 9rem 4rem 5rem; border-bottom: 1px solid #1a1a1a; position: relative; z-index: 1;
-    max-width: 1100px; margin: 0 auto;
-  }
-  .sec-tag { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--purple); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.6rem; }
-  .sec-tag::before { content: ''; width: 20px; height: 1px; background: var(--purple); }
-  .hero-title { font-family: var(--serif); font-style: italic; font-size: clamp(3rem, 7vw, 6.5rem); line-height: 1.05; font-weight: 400; margin-bottom: 1.5rem; }
-  .hero-title strong { font-weight: 700; }
-  .hero-sub { color: #777; font-weight: 300; font-size: 1rem; max-width: 520px; line-height: 1.9; margin-bottom: 2rem; }
-  .btn-row { display: flex; gap: 0.75rem; margin-bottom: 3rem; flex-wrap: wrap; }
-  .btn-primary { font-family: var(--sans); font-size: 0.85rem; font-weight: 600; background: var(--purple); color: #fff; border: none; padding: 0.7rem 1.5rem; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; transition: opacity 0.2s; }
-  .btn-primary:hover { opacity: 0.85; }
-  .btn-outline { font-family: var(--sans); font-size: 0.85rem; font-weight: 500; background: transparent; color: #fff; border: 1px solid #333; padding: 0.7rem 1.5rem; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; transition: border-color 0.2s; }
-  .btn-outline:hover { border-color: var(--purple); color: var(--purple); }
-  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 900px; }
-  .stat-card { background: rgba(255,255,255,0.03); border: 1px solid #1a1a1a; border-radius: 12px; padding: 1.25rem; backdrop-filter: blur(4px); }
-  .stat-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: #555; margin-bottom: 0.6rem; }
-  .stat-val { font-size: 2.2rem; font-weight: 600; line-height: 1; margin-bottom: 0.3rem; }
-  .stat-val.p { color: var(--purple); } .stat-val.w { color: var(--white); }
-  .stat-sub { font-size: 0.75rem; color: var(--purple); font-weight: 300; }
-  .stat-sub.dim { color: #333; }
+/* ── MAIN CONTENT ────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-width);
+  flex:1;
+  max-width: 860px;
+  padding: 3rem 4rem 6rem;
+  min-width: 0;
+}
 
-  /* SECTIONS */
-  .sec-wrap { border-bottom: 1px solid #1a1a1a; }
-  .sec { padding: 5rem 4rem; max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
-  .sec-label { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--purple); margin-bottom: 0.5rem; }
-  .sec-title { font-family: var(--serif); font-style: italic; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 400; line-height: 1.1; margin-bottom: 1rem; }
-  .sec-p { color: #777; font-weight: 300; font-size: 0.95rem; margin-bottom: 2rem; max-width: 680px; }
-  h3 { font-family: var(--mono); font-size: 0.9rem; font-weight: 700; color: var(--white); margin: 2.5rem 0 0.75rem; display: flex; align-items: center; gap: 0.6rem; }
-  h3::before { content: '//'; color: var(--purple); font-weight: 400; }
-  p { color: #777; font-weight: 300; margin-bottom: 1rem; max-width: 680px; }
+/* ── BREADCRUMB ──────────────────────────────────── */
+.breadcrumb {
+  display:flex; align-items:center; gap:0.5rem;
+  font-family:var(--mono); font-size:0.7rem;
+  color:var(--text-dim);
+  margin-bottom:2rem;
+}
+.breadcrumb span { color:var(--text-muted); }
+.breadcrumb a { color:var(--text-muted); text-decoration:none; }
+.breadcrumb a:hover { color:var(--purple-light); }
 
-  /* BUG GRID */
-  .bug-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: #1a1a1a; border: 1px solid #1a1a1a; border-radius: 10px; overflow: hidden; margin: 2rem 0; }
-  .bug-item { background: rgba(255,255,255,0.02); padding: 1.5rem; transition: background 0.2s; }
-  .bug-item:hover { background: rgba(139,92,246,0.07); }
-  .bug-num { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; color: rgba(255,68,85,0.2); line-height: 1; margin-bottom: 0.4rem; }
-  .bug-title { font-family: var(--mono); font-size: 0.82rem; font-weight: 700; color: var(--white); margin-bottom: 0.4rem; }
-  .bug-desc { font-size: 0.82rem; color: #555; font-weight: 300; line-height: 1.7; max-width: none; margin: 0; }
+/* ── HEADINGS ────────────────────────────────────── */
+.doc-section { padding-top:1rem; margin-top:3rem; }
+.doc-section:first-child { margin-top:0; }
+h1 { font-size:2rem; font-weight:700; color:var(--white); line-height:1.2; margin-bottom:0.75rem; letter-spacing:-0.02em; }
+h2 { font-size:1.3rem; font-weight:600; color:var(--white); margin:2.5rem 0 0.75rem; padding-top:0.5rem; border-top:1px solid var(--border); line-height:1.3; }
+h2:first-child { border-top:none; }
+h3 { font-size:1rem; font-weight:600; color:var(--text); margin:1.75rem 0 0.5rem; }
+h4 { font-size:0.88rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin:1.5rem 0 0.5rem; font-family:var(--mono); }
+.section-subtitle { font-size:1rem; color:var(--text-muted); font-weight:300; margin-bottom:2rem; max-width:640px; line-height:1.8; }
+.doc-section p { color:var(--text-muted); margin-bottom:0.9rem; max-width:680px; line-height:1.8; }
+.doc-section p strong { color:var(--text); font-weight:600; }
+.doc-section ul, .doc-section ol { color:var(--text-muted); padding-left:1.5rem; margin-bottom:1rem; }
+.doc-section li { margin-bottom:0.3rem; line-height:1.8; }
+.doc-section li strong { color:var(--text); }
 
-  /* FEATURE CARDS */
-  .feat { background: rgba(255,255,255,0.02); border: 1px solid #1a1a1a; border-left: 3px solid var(--purple); border-radius: 0 10px 10px 0; padding: 1.25rem 1.5rem; margin: 1rem 0; }
-  .feat.red { border-left-color: var(--red); }
-  .feat-title { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--white); }
-  .feat-desc { font-size: 0.85rem; color: #666; font-weight: 300; line-height: 1.7; max-width: none; margin: 0; }
+/* ── INLINE CODE ─────────────────────────────────── */
+code { font-family:var(--mono); font-size:0.82em; background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.2); border-radius:3px; padding:0.1em 0.4em; color:var(--purple-light); }
 
-  /* CODE */
-  pre { background: var(--bg3); border: 1px solid #1a1a1a; border-radius: 8px; padding: 1.25rem 1.5rem; overflow-x: auto; margin: 1rem 0; }
-  code { font-family: var(--mono); font-size: 0.8rem; line-height: 1.9; color: #ccc; }
-  .kw { color: #a78bfa; } .fn { color: #60d9f8; } .str { color: #86efac; } .cm { color: #444; font-style: italic; } .acc { color: var(--purple); }
-  .lbl { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
-  .lbl.bad { color: var(--red); } .lbl.good { color: var(--purple); }
-  p code, li code { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 3px; padding: 0.1em 0.4em; font-size: 0.82em; color: #a78bfa; }
+/* ── CODE BLOCKS ─────────────────────────────────── */
+.code-block { position:relative; margin:1.25rem 0; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+.code-header { display:flex; align-items:center; justify-content:space-between; background:#0a0a16; padding:0.6rem 1rem; border-bottom:1px solid var(--border); }
+.code-lang { font-family:var(--mono); font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); }
+.copy-btn { font-family:var(--mono); font-size:0.65rem; color:var(--text-dim); background:none; border:1px solid var(--border); padding:0.2rem 0.6rem; border-radius:4px; cursor:pointer; transition:all 0.2s; }
+.copy-btn:hover { color:var(--purple-light); border-color:var(--purple); }
+.copy-btn.copied { color:var(--green); border-color:var(--green); }
+pre { background:var(--code-bg); padding:1.25rem 1.5rem; overflow-x:auto; margin:0; }
+pre code { background:none; border:none; padding:0; font-size:0.82rem; line-height:1.9; color:#ccc; }
+.kw{color:#a78bfa}.fn{color:#60d9f8}.str{color:#86efac}.cm{color:#444;font-style:italic}.acc{color:var(--purple-light)}.num{color:#fb923c}.cls{color:#fcd34d}
 
-  /* CALLOUT */
-  .callout { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 1rem 1.5rem; margin: 1.5rem 0; font-family: var(--mono); font-size: 0.8rem; color: #a78bfa; line-height: 1.8; }
-  .callout strong { color: var(--purple); }
+/* ── CALLOUT BOXES ───────────────────────────────── */
+.callout { border-radius:8px; padding:1rem 1.25rem; margin:1.25rem 0; border-left:3px solid; }
+.callout-title { font-size:0.78rem; font-weight:600; font-family:var(--mono); letter-spacing:0.05em; margin-bottom:0.35rem; text-transform:uppercase; }
+.callout p { margin:0; font-size:0.88rem; line-height:1.7; max-width:none; }
+.callout code { font-size:0.8em; }
+.callout-warning { background:rgba(245,158,11,0.07); border-color:#f59e0b; }
+.callout-warning .callout-title { color:#f59e0b; }
+.callout-warning p { color:#d4a855; }
+.callout-danger { background:rgba(239,68,68,0.07); border-color:#ef4444; }
+.callout-danger .callout-title { color:#ef4444; }
+.callout-danger p { color:#cc7070; }
+.callout-info { background:rgba(59,130,246,0.07); border-color:#3b82f6; }
+.callout-info .callout-title { color:#3b82f6; }
+.callout-info p { color:#7aabdd; }
+.callout-success { background:rgba(16,185,129,0.07); border-color:#10b981; }
+.callout-success .callout-title { color:#10b981; }
+.callout-success p { color:#6bc9a3; }
+.callout-tip { background:var(--purple-dim); border-color:var(--purple); }
+.callout-tip .callout-title { color:var(--purple-light); }
+.callout-tip p { color:#9d88cc; }
 
-  /* TABLE */
-  .table-wrap { overflow-x: auto; margin: 2rem 0; }
-  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; }
-  thead tr { border-bottom: 1px solid var(--purple); }
-  th { text-align: left; padding: 0.75rem 1rem; color: var(--purple); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.65rem; }
-  td { padding: 0.75rem 1rem; border-bottom: 1px solid #1a1a1a; color: #666; vertical-align: top; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-  td:first-child { color: var(--white); }
-  td.g { color: var(--purple); } td.b { color: var(--red); }
+/* ── TABLES ──────────────────────────────────────── */
+.table-wrap { overflow-x:auto; margin:1.25rem 0; border-radius:8px; border:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+thead tr { background:var(--card-bg); border-bottom:1px solid var(--border); }
+th { text-align:left; padding:0.7rem 1rem; font-weight:600; color:var(--text); font-size:0.82rem; }
+td { padding:0.7rem 1rem; border-bottom:1px solid var(--border); color:var(--text-muted); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.015); }
+td:first-child, th:first-child { color:var(--text); }
+td.good { color:var(--green); font-family:var(--mono); font-size:0.8rem; }
+td.bad { color:var(--red); font-family:var(--mono); font-size:0.8rem; }
+td.neutral { color:var(--text-muted); font-family:var(--mono); font-size:0.8rem; }
 
-  /* LIMITS */
-  .limit-list { list-style: none; margin: 1.5rem 0; }
-  .limit-list li { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #1a1a1a; align-items: flex-start; }
-  .lim-badge { font-family: var(--mono); font-size: 0.6rem; color: var(--red); background: rgba(255,68,85,0.07); border: 1px solid rgba(255,68,85,0.2); padding: 0.2rem 0.5rem; border-radius: 3px; white-space: nowrap; margin-top: 0.15rem; flex-shrink: 0; }
-  .lim-badge.note { color: var(--purple); background: rgba(139,92,246,0.07); border-color: rgba(139,92,246,0.2); }
-  .lim-text strong { display: block; font-family: var(--mono); font-size: 0.82rem; color: var(--white); margin-bottom: 0.2rem; }
-  .lim-text small { font-size: 0.82rem; color: #555; font-weight: 300; }
+/* ── CARDS ───────────────────────────────────────── */
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1px; background:var(--border); border-radius:8px; overflow:hidden; margin:1.25rem 0; border:1px solid var(--border); }
+.card { background:var(--card-bg); padding:1.25rem; transition:background 0.15s; }
+.card:hover { background:#16162a; }
+.card-icon { font-size:1.1rem; margin-bottom:0.5rem; }
+.card-title { font-size:0.88rem; font-weight:600; color:var(--text); margin-bottom:0.3rem; font-family:var(--mono); }
+.card-desc { font-size:0.82rem; color:var(--text-muted); line-height:1.6; }
+.card-num { font-family:var(--mono); font-size:1.5rem; font-weight:700; opacity:0.15; line-height:1; margin-bottom:0.3rem; }
+.card-num.red { color:var(--red); }
+.card-num.purple { color:var(--purple); }
 
-  /* FOOTER */
-  .foot-wrap { border-top: 1px solid #1a1a1a; }
-  footer { padding: 3rem 4rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
-  .foot-left { font-family: var(--mono); font-size: 0.72rem; color: #444; line-height: 2.2; }
-  .foot-left a { color: var(--purple); text-decoration: none; }
-  .foot-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-  .foot-links a { font-family: var(--mono); font-size: 0.7rem; color: #555; text-decoration: none; border: 1px solid #1a1a1a; padding: 0.5rem 1rem; border-radius: 4px; transition: all 0.2s; }
-  .foot-links a:hover { color: var(--purple); border-color: var(--purple); }
+/* ── BADGE ───────────────────────────────────────── */
+.badge { display:inline-block; font-family:var(--mono); font-size:0.65rem; letter-spacing:0.08em; padding:0.15rem 0.5rem; border-radius:4px; margin-right:0.5rem; }
+.badge-confirmed { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; }
+.badge-works { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; }
+.badge-note { background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.3); color:var(--purple-light); }
+.badge-warning { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:#f59e0b; }
 
-  /* FADE */
-  .fade { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
-  .fade.in { opacity: 1; transform: translateY(0); }
+/* ── API CARDS ───────────────────────────────────── */
+.api-card { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:1.25rem; margin:0.75rem 0; }
+.api-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:0.5rem; }
+.api-name { font-weight:600; color:var(--white); font-size:0.9rem; }
+.api-url { font-family:var(--mono); font-size:0.72rem; color:var(--text-dim); margin-top:0.2rem; word-break:break-all; }
+.api-desc { font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; }
 
-  @media (max-width: 768px) {
-    nav { padding: 0 1rem; }
-    .nav-links { display: none; }
-    .hero { padding: 7rem 1.5rem 3rem; }
-    .stat-grid { grid-template-columns: 1fr 1fr; }
-    .sec { padding: 3rem 1.5rem; }
-    footer { padding: 2rem 1.5rem; flex-direction: column; align-items: flex-start; }
-    .blob { display: none; }
-    .fade { opacity: 1; transform: none; }
-  }
+/* ── HERO ────────────────────────────────────────── */
+.hero-section { margin-bottom:3rem; }
+.hero-tag { font-family:var(--mono); font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--purple-light); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+.hero-tag::before { content:''; width:16px; height:1px; background:var(--purple); }
+.hero-title { font-size:2.2rem; font-weight:700; color:var(--white); line-height:1.15; letter-spacing:-0.02em; margin-bottom:0.75rem; }
+.hero-sub { font-size:1rem; color:var(--text-muted); font-weight:300; max-width:560px; line-height:1.85; margin-bottom:1.75rem; }
+.hero-stats { display:flex; gap:2rem; margin-bottom:2rem; flex-wrap:wrap; }
+.stat { }
+.stat-num { font-size:1.75rem; font-weight:700; color:var(--purple-light); line-height:1; }
+.stat-label { font-family:var(--mono); font-size:0.65rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; margin-top:0.15rem; }
+.hero-btns { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:2rem; }
+.btn-primary { font-size:0.85rem; font-weight:600; background:var(--purple); color:#fff; border:none; padding:0.65rem 1.4rem; border-radius:7px; cursor:pointer; text-decoration:none; transition:opacity 0.2s; }
+.btn-primary:hover { opacity:0.85; }
+.btn-secondary { font-size:0.85rem; font-weight:500; background:transparent; color:var(--text); border:1px solid var(--border-light); padding:0.65rem 1.4rem; border-radius:7px; cursor:pointer; text-decoration:none; transition:border-color 0.2s; }
+.btn-secondary:hover { border-color:var(--purple); color:var(--purple-light); }
+
+/* ── GLOSSARY GRID ───────────────────────────────── */
+.glossary-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 2rem; margin:1rem 0; }
+.gloss-item { }
+.gloss-term { font-family:var(--mono); font-size:0.82rem; font-weight:600; color:var(--text); }
+.gloss-def { font-size:0.82rem; color:var(--text-muted); line-height:1.6; margin-top:0.1rem; }
+
+/* ── TOC (on-page) ───────────────────────────────── */
+.page-toc { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:1.25rem 1.5rem; margin:2rem 0; }
+.page-toc-title { font-family:var(--mono); font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:0.75rem; }
+.page-toc ol { list-style:decimal; padding-left:1.25rem; }
+.page-toc li { font-size:0.85rem; padding:0.15rem 0; }
+.page-toc a { color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
+.page-toc a:hover { color:var(--purple-light); }
+
+/* ── DIVIDER ─────────────────────────────────────── */
+hr { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+
+/* ── FOOTER ──────────────────────────────────────── */
+.doc-footer { border-top:1px solid var(--border); margin-top:4rem; padding-top:2rem; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1.5rem; }
+.doc-footer-left { font-size:0.8rem; color:var(--text-dim); line-height:2; }
+.doc-footer-left a { color:var(--purple-light); text-decoration:none; }
+.doc-footer-links { display:flex; gap:0.75rem; flex-wrap:wrap; }
+.doc-footer-links a { font-size:0.78rem; color:var(--text-muted); text-decoration:none; border:1px solid var(--border); padding:0.4rem 0.9rem; border-radius:6px; transition:all 0.2s; }
+.doc-footer-links a:hover { color:var(--purple-light); border-color:var(--purple); }
+.what-next { background:var(--purple-dim); border:1px solid var(--border-light); border-radius:8px; padding:1.25rem 1.5rem; margin:2rem 0; }
+.what-next-title { font-weight:600; color:var(--white); margin-bottom:0.5rem; }
+.what-next-links { display:flex; gap:1rem; flex-wrap:wrap; }
+.what-next-links a { font-size:0.85rem; color:var(--purple-light); text-decoration:none; }
+.what-next-links a:hover { text-decoration:underline; }
+
+/* ── MOBILE ──────────────────────────────────────── */
+@media (max-width:768px) {
+  .sidebar { transform:translateX(-100%); transition:transform 0.3s; }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; padding:2rem 1.25rem 4rem; }
+  .hero-title { font-size:1.6rem; }
+  .glossary-grid { grid-template-columns:1fr; }
+  .hero-stats { gap:1.25rem; }
+  .topnav-links { display:none; }
+  .menu-btn { display:flex; }
+}
+.menu-btn { display:none; background:none; border:none; color:var(--text); cursor:pointer; padding:0.25rem; }
 </style>
 </head>
 <body>
 
-<!-- BLOBS -->
-<div class="blob blob-purple"></div>
-<div class="blob blob-blue"></div>
-<div class="blob blob-orange"></div>
-
-<!-- NAV -->
-<nav>
-  <div class="nav-logo">
-    <div class="nav-icon">
-      <svg viewBox="0 0 14 14" fill="none"><polygon points="7,1 13,5 13,9 7,13 1,9 1,5" stroke="#8b5cf6" stroke-width="1.2" fill="none"/></svg>
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a href="#" class="topnav-logo">
+    <div class="topnav-logo-icon">
+      <svg viewBox="0 0 16 16" fill="none"><polygon points="8,1 15,5 15,11 8,15 1,11 1,5" stroke="#a78bfa" stroke-width="1.5" fill="none"/></svg>
     </div>
-    <div class="nav-brand">Gen<em>Layer</em></div>
-  </div>
-  <ul class="nav-links">
-    <li><a href="#bugs">Bugs</a></li>
-    <li><a href="#patterns">Patterns</a></li>
-    <li><a href="#reference">Reference</a></li>
-    <li><a href="#limits">Limits</a></li>
-  </ul>
-  <div class="nav-pills">
-    <a href="https://studio.genlayer.com" target="_blank" class="pill active">STUDIO</a>
-    <a href="#" class="pill">FIELD GUIDE</a>
-    <a href="https://github.com/Manablaq" target="_blank" class="pill">ALBERT</a>
-  </div>
+    <span class="topnav-logo-text">Gen<span>Layer</span> Docs</span>
+  </a>
+  <span class="topnav-badge">by Albert</span>
+  <div class="topnav-spacer"></div>
+  <nav class="topnav-links">
+    <a href="#overview">Overview</a>
+    <a href="#working-apis">APIs</a>
+    <a href="#bugs">Bugs</a>
+    <a href="#best-practices">Practices</a>
+    <a href="#security">Security</a>
+    <a href="#reference">Reference</a>
+  </nav>
+  <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank" class="topnav-github">↗ GitHub</a>
+  <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
 </nav>
 
-<!-- HERO -->
-<div class="sec-wrap">
-<section class="hero">
-  <div class="sec-tag">GenLayer Builder Program — Tools & Infrastructure</div>
-  <div class="hero-title"><strong>Build smart.</strong><br>Ship faster.</div>
-  <p class="hero-sub">Real bugs, patterns, and fixes from building 4 production Intelligent Contracts on GenLayer Studio. What the documentation doesn't tell you.</p>
-  <div class="btn-row">
-    <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank" class="btn-primary">↗ GitHub Repo</a>
-    <a href="https://dev.to/albert__crypt/genlayer-studio-7-things-that-break-and-how-to-fix-them-ni4" target="_blank" class="btn-outline">↗ DEV.to Post</a>
-  </div>
+<div class="layout">
 
-  <!-- KEY CONCEPTS -->
-  <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:1.5rem 2rem;margin-bottom:2.5rem;max-width:900px;">
-    <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:#8b5cf6;margin-bottom:1rem;">// Quick Glossary</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem 2rem;">
-      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">Intelligent Contract</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">A smart contract that can fetch live web data and use AI — all on-chain.</p></div>
-      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">Validator</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">A network node that independently runs your fetch logic to verify results.</p></div>
-      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">prompt_comparative</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">Runs your fetch across all validators and uses AI to check they got the same answer.</p></div>
-      <div><span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#fff;">Equivalence string</span><p style="font-size:0.78rem;color:#666;margin:0.2rem 0 0;max-width:none;">The rule you write to define what counts as "the same" result between validators.</p></div>
-    </div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Getting Started</div>
+    <a href="#overview" class="sidebar-link active">Overview</a>
+    <a href="#key-concepts" class="sidebar-link">Key Concepts</a>
+    <a href="#contracts-built" class="sidebar-link">Contracts Built</a>
   </div>
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="stat-label">Bugs Documented</div>
-      <div class="stat-val w">5</div>
-      <div class="stat-sub">On GenLayer Studio</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Patterns Covered</div>
-      <div class="stat-val p">12</div>
-      <div class="stat-sub">Production-tested</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Contracts Built</div>
-      <div class="stat-val w">4</div>
-      <div class="stat-sub dim">Crypto · Weather · Social · Vault</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Evidence URLs</div>
-      <div class="stat-val p">3</div>
-      <div class="stat-sub">GitHub · DEV.to · This site</div>
-    </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Working APIs</div>
+    <a href="#working-apis" class="sidebar-link">Verified APIs</a>
+    <a href="#api-patterns" class="sidebar-link sub">API Patterns</a>
   </div>
-</section>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Troubleshooting</div>
+    <a href="#bugs" class="sidebar-link">Known Bugs</a>
+    <a href="#bug-webget" class="sidebar-link sub">web.get() stores nothing</a>
+    <a href="#bug-treemap" class="sidebar-link sub">TreeMap lost</a>
+    <a href="#bug-sender" class="sidebar-link sub">sender_address fails</a>
+    <a href="#bug-nondet" class="sidebar-link sub">run_nondet_unsafe</a>
+    <a href="#bug-usererror" class="sidebar-link sub">UserError in __init__</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Best Practices</div>
+    <a href="#best-practices" class="sidebar-link">All Patterns</a>
+    <a href="#bp-equivalence" class="sidebar-link sub">Equivalence strings</a>
+    <a href="#bp-state" class="sidebar-link sub">State management</a>
+    <a href="#bp-closures" class="sidebar-link sub">Closures in loops</a>
+    <a href="#bp-ai" class="sidebar-link sub">AI prompts</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Security</div>
+    <a href="#security" class="sidebar-link">Security Guide</a>
+    <a href="#sec-access" class="sidebar-link sub">Access control</a>
+    <a href="#sec-vault" class="sidebar-link sub">Secret management</a>
+    <a href="#sec-apis" class="sidebar-link sub">API safety</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Studio</div>
+    <a href="#studio-tips" class="sidebar-link">Studio Tips</a>
+    <a href="#limitations" class="sidebar-link">Known Limitations</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Reference</div>
+    <a href="#reference" class="sidebar-link">Quick Reference</a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="#">GenLayer</a>
+  <span>/</span>
+  <a href="#">Developer Guide</a>
+  <span>/</span>
+  Overview
 </div>
 
-<!-- BUGS -->
-<div class="sec-wrap">
-<section class="sec fade" id="bugs">
-  <div class="sec-label">// 01 — known bugs</div>
-  <div class="sec-title">Things that <span style="color:var(--red)">silently break.</span></div>
-  <p class="sec-p">None of these produce a useful error message. Every GenLayer developer hits them. All five were discovered building the four oracle contracts.</p>
+<!-- ═══════════════════════════════════════════ -->
+<!-- HERO -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="hero-section">
+  <div class="hero-tag">GenLayer Builder Program — Tools & Infrastructure</div>
+  <h1 class="hero-title">Intelligent Contracts<br>Developer Guide</h1>
+  <p class="hero-sub">Everything you need to build, deploy, and debug Intelligent Contracts on GenLayer Studio. Based on real development of four production contracts — including every bug hit, every fix found, and every pattern that actually works.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">Bugs documented</div></div>
+    <div class="stat"><div class="stat-num">12</div><div class="stat-label">Patterns</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Working APIs</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Contracts built</div></div>
+  </div>
+  <div class="hero-btns">
+    <a href="#bugs" class="btn-primary">View Known Bugs →</a>
+    <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank" class="btn-secondary">↗ GitHub Repo</a>
+  </div>
+</div>
 
-  <div class="bug-grid">
-    <div class="bug-item"><div class="bug-num">01</div><div class="bug-title">web.get() stores nothing</div><p class="bug-desc">You call the API, it succeeds, no error is thrown — but your contract stores an empty string every time. Use web.render() instead.</p></div>
-    <div class="bug-item"><div class="bug-num">02</div><div class="bug-title">TreeMap doesn't persist</div><p class="bug-desc">TreeMap works fine when testing locally but loses all data after every transaction on Studio. Use a plain string with JSON instead.</p></div>
-    <div class="bug-item"><div class="bug-num">03</div><div class="bug-title">sender_address kills deploy</div><p class="bug-desc">Using gl.message.sender_address inside __init__ crashes the contract at deploy time — not at runtime. Pass the address as a parameter instead.</p></div>
-    <div class="bug-item"><div class="bug-num">04</div><div class="bug-title">run_nondet_unsafe + web</div><p class="bug-desc">Combining run_nondet_unsafe with any web fetch fails silently at runtime. Use prompt_comparative for all web and AI operations.</p></div>
-    <div class="bug-item"><div class="bug-num">05</div><div class="bug-title">gl.vm.UserError in __init__</div><p class="bug-desc">Raising gl.vm.UserError inside __init__ prevents the contract from deploying at all. Use assert for all constructor validation.</p></div>
+<!-- ═══════════════════════════════════════════ -->
+<!-- OVERVIEW -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="overview">
+  <h2>Overview</h2>
+  <p class="section-subtitle">This guide documents real development experience from building four Intelligent Contracts on GenLayer Studio. It covers everything that worked, everything that didn't, and why.</p>
+
+  <p>GenLayer's official documentation explains <em>what</em> Intelligent Contracts are. It doesn't tell you what silently fails, what state type doesn't persist, or what will crash your contract at deploy time without a useful error message.</p>
+  <p>This guide fills that gap. Every bug, every fix, and every pattern documented here was discovered by building real contracts — not by reading docs.</p>
+
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ Who this is for</div>
+    <p>Developers building Intelligent Contracts on GenLayer Studio who want to avoid the common pitfalls and ship working contracts faster.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- KEY CONCEPTS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="key-concepts">
+  <h2>Key Concepts</h2>
+  <p>Before diving in, here is a plain-English explanation of every GenLayer-specific term used in this guide.</p>
+
+  <div class="glossary-grid">
+    <div class="gloss-item">
+      <div class="gloss-term">Intelligent Contract</div>
+      <div class="gloss-def">A smart contract that can fetch live data from the internet and use AI to process it — all on-chain, verified by validators.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Validator</div>
+      <div class="gloss-def">A node on the GenLayer network that independently runs your contract's fetch logic to verify the result.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Consensus</div>
+      <div class="gloss-def">Multiple validators must agree on the result of a transaction before it is stored on-chain.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">prompt_comparative</div>
+      <div class="gloss-def">A built-in function that runs your fetch code across all validators and uses AI to check if they all got the same answer.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Equivalence string</div>
+      <div class="gloss-def">The rule you write to tell the AI what counts as "the same" result between two validators. Must match your data's volatility.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">GenLayer Studio</div>
+      <div class="gloss-def">The browser-based IDE where you write, deploy, and test Intelligent Contracts on the testnet.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">exec_prompt</div>
+      <div class="gloss-def">A built-in function that sends a prompt to an AI model and returns the response as a string.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Finalized</div>
+      <div class="gloss-def">A transaction status meaning all validators reached consensus and the result has been written to the chain.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- CONTRACTS BUILT -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="contracts-built">
+  <h2>Contracts Built</h2>
+  <p>This guide is based on building and deploying four production contracts. All code is available on GitHub.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Contract</th><th>Data Source</th><th>Write Methods</th><th>Read Methods</th><th>Key Feature</th></tr></thead>
+      <tbody>
+        <tr><td><strong>CryptoOracle</strong></td><td>Binance API (10 assets)</td><td>4</td><td>9</td><td>Live BTC/ETH prices, portfolio calculator, market movers</td></tr>
+        <tr><td><strong>WeatherOracle</strong></td><td>Open-Meteo (13 cities)</td><td>6</td><td>9</td><td>Weather alerts, forecasts, city comparisons</td></tr>
+        <tr><td><strong>SocialOracle</strong></td><td>Hacker News Firebase</td><td>5</td><td>7</td><td>Trending stories, AI briefings, topic analysis</td></tr>
+        <tr><td><strong>MultiKeyVault</strong></td><td>N/A (secret storage)</td><td>13</td><td>11</td><td>API key vault, rate limiting, audit log, emergency wipe</td></tr>
+      </tbody>
+    </table>
   </div>
 
-  <h3>Bug 01 — web.get() silent failure</h3>
-  <p>The most dangerous bug because it produces zero errors. The transaction finalizes and your state stores an empty string every time.</p>
-  <div class="lbl bad">❌ Incorrect — silent data loss</div>
-  <pre><code><span class="cm"># Looks correct. Compiles. Deploys. Finalizes. Stores nothing.</span>
-response = gl.nondet.web.get(url)
-self.store = response.body  <span class="cm"># Always empty string on Studio</span></code></pre>
-  <div class="lbl good">✅ Correct — from CryptoOracle</div>
-  <pre><code><span class="kw">def</span> <span class="fn">fetch</span>() -> str:
+  <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank" class="btn-secondary" style="display:inline-flex;margin-top:0.5rem;">↗ View all contracts on GitHub</a>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- WORKING APIS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="working-apis">
+  <h2>Working APIs</h2>
+  <p class="section-subtitle">GenLayer validators need to independently replicate every web fetch to reach consensus. This means only public APIs without authentication can be used.</p>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">⚠ Why private APIs don't work</div>
+    <p>If your API requires OAuth tokens, API keys in headers, or HMAC signatures, validators cannot independently replicate the call — so consensus will always fail. Stick to fully public endpoints.</p>
+  </div>
+
+  <h3>Verified Public APIs</h3>
+  <p>These three APIs were tested and confirmed working on GenLayer Studio across all four contracts.</p>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <div>
+        <div class="api-name">Binance Public Ticker <span class="badge badge-works">VERIFIED</span></div>
+        <div class="api-url">https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT</div>
+      </div>
+    </div>
+    <p class="api-desc">Returns 24-hour price stats for any trading pair. No API key required. Used in CryptoOracle to fetch BTC, ETH, SOL, BNB, XRP, ADA, DOGE, LINK, MATIC, and AVAX prices.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>url = <span class="str">f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"</span>
+raw = gl.nondet.web.<span class="fn">render</span>(url, mode=<span class="str">"text"</span>)
+data = json.<span class="fn">loads</span>(raw)
+price = <span class="fn">float</span>(data[<span class="str">"lastPrice"</span>])</code></pre>
+    </div>
+  </div>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <div>
+        <div class="api-name">Open-Meteo Weather <span class="badge badge-works">VERIFIED</span></div>
+        <div class="api-url">https://api.open-meteo.com/v1/forecast?latitude=6.52&longitude=3.38&current=temperature_2m</div>
+      </div>
+    </div>
+    <p class="api-desc">Real-time weather data for any coordinates. No API key required. Used in WeatherOracle for 13 cities including Lagos, London, New York, Tokyo, Dubai, and more.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>url = (
+    <span class="str">f"https://api.open-meteo.com/v1/forecast"</span>
+    <span class="str">f"?latitude={lat}&longitude={lon}"</span>
+    <span class="str">f"&current=temperature_2m,relative_humidity_2m,"</span>
+    <span class="str">f"wind_speed_10m,precipitation,weathercode"</span>
+    <span class="str">f"&timezone=auto"</span>
+)
+raw  = gl.nondet.web.<span class="fn">render</span>(url, mode=<span class="str">"text"</span>)
+data = json.<span class="fn">loads</span>(raw)[<span class="str">"current"</span>]</code></pre>
+    </div>
+  </div>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <div>
+        <div class="api-name">Hacker News Firebase <span class="badge badge-works">VERIFIED</span></div>
+        <div class="api-url">https://hacker-news.firebaseio.com/v0/topstories.json</div>
+      </div>
+    </div>
+    <p class="api-desc">Real-time tech news stories from Hacker News. No API key required. Used in SocialOracle to fetch top, new, and best story feeds.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>HN_API = <span class="str">"https://hacker-news.firebaseio.com/v0"</span>
+
+<span class="cm"># Fetch story IDs</span>
+ids_raw = gl.nondet.web.<span class="fn">render</span>(<span class="acc">f</span><span class="str">"{HN_API}/topstories.json"</span>, mode=<span class="str">"text"</span>)
+ids = json.<span class="fn">loads</span>(ids_raw)
+
+<span class="cm"># Fetch individual story</span>
+story_raw = gl.nondet.web.<span class="fn">render</span>(<span class="acc">f</span><span class="str">"{HN_API}/item/{ids[0]}.json"</span>, mode=<span class="str">"text"</span>)
+story = json.<span class="fn">loads</span>(story_raw)</code></pre>
+    </div>
+  </div>
+
+  <div id="api-patterns">
+  <h3>API Pattern: Always wrap in try/except</h3>
+  <p>Always handle API failures inside the fetch closure. Return a structured error JSON rather than letting an exception crash the validator consensus.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — correct pattern</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">fetch</span>() -> str:
     <span class="kw">try</span>:
         raw = gl.nondet.web.<span class="fn">render</span>(url, mode=<span class="str">"text"</span>)
-        <span class="kw">if not</span> raw <span class="kw">or</span> raw.strip() == <span class="str">"null"</span>:
-            <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
-        data = json.<span class="fn">loads</span>(raw)
-        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"price"</span>: data[<span class="str">"lastPrice"</span>], <span class="str">"status"</span>: <span class="str">"ok"</span>}, sort_keys=<span class="acc">True</span>)
+        <span class="kw">if not</span> raw <span class="kw">or</span> raw.strip() <span class="kw">in</span> [<span class="str">"null"</span>, <span class="str">""</span>, <span class="str">"null\n"</span>]:
+            <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API is unavailable."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
+        <span class="cm"># parse and return data</span>
+        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"data"</span>: ..., <span class="str">"status"</span>: <span class="str">"ok"</span>}, sort_keys=<span class="acc">True</span>)
     <span class="kw">except</span> Exception:
-        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
+        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API is unavailable."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})</code></pre>
+  </div>
+  </div>
+</div>
 
-fresh = gl.eq_principle.<span class="fn">prompt_comparative</span>(fetch, <span class="str">"..."</span>)</code></pre>
+<!-- ═══════════════════════════════════════════ -->
+<!-- KNOWN BUGS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="bugs">
+  <h2>Known Bugs</h2>
+  <p class="section-subtitle">These are bugs confirmed during development. None of them produce a useful error message, which makes them especially dangerous for new developers.</p>
 
-  <h3>Bug 02 — TreeMap state vanishes</h3>
-  <div class="lbl bad">❌ Incorrect — state lost on Studio</div>
-  <pre><code><span class="kw">class</span> <span class="fn">CryptoOracle</span>(gl.Contract):
-    prices: TreeMap[str, str]  <span class="cm"># Disappears after each transaction</span></code></pre>
-  <div class="lbl good">✅ Correct — used across all 4 contracts</div>
-  <pre><code><span class="kw">class</span> <span class="fn">CryptoOracle</span>(gl.Contract):
-    store: str  <span class="cm"># Persists correctly on Studio</span>
-    pulse: str  <span class="cm"># Freshness metadata</span>
+  <div class="card-grid">
+    <div class="card"><div class="card-num red">01</div><div class="card-title">web.get() stores nothing</div><div class="card-desc">Call succeeds, transaction finalizes, state is always empty.</div></div>
+    <div class="card"><div class="card-num red">02</div><div class="card-title">TreeMap doesn't persist</div><div class="card-desc">Works locally, state lost after every transaction on Studio.</div></div>
+    <div class="card"><div class="card-num red">03</div><div class="card-title">sender_address kills deploy</div><div class="card-desc">Runtime error at deploy time, not at transaction time.</div></div>
+    <div class="card"><div class="card-num red">04</div><div class="card-title">run_nondet_unsafe + web</div><div class="card-desc">Silently fails when combined with any web fetch.</div></div>
+    <div class="card"><div class="card-num red">05</div><div class="card-title">UserError in __init__</div><div class="card-desc">Prevents the contract from deploying entirely.</div></div>
+  </div>
+
+  <!-- BUG 01 -->
+  <h3 id="bug-webget">Bug 01 — web.get() stores nothing</h3>
+  <p><span class="badge badge-confirmed">CONFIRMED</span> This is the most dangerous bug because it produces <strong>zero errors</strong>. Your transaction finalizes, Studio shows "Finalized," and your state stores an empty string every single time.</p>
+
+  <div class="callout callout-danger">
+    <div class="callout-title">🚨 Why this is dangerous</div>
+    <p>You won't know anything is wrong until you call a read method and find your state is empty. The transaction log shows success. There is no error. You will waste hours debugging code that is not broken.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — wrong ❌</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="cm"># This looks correct. It compiles. It deploys. It finalizes.</span>
+<span class="cm"># But response.body is always an empty string on Studio.</span>
+response = gl.nondet.web.get(url)
+self.store = response.body  <span class="cm"># ← always ""</span></code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — correct ✅ (from CryptoOracle)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">@gl.public.write</span>
+<span class="kw">def</span> <span class="fn">fetch_price</span>(self, symbol: str) -> typing.Any:
+    url = <span class="acc">f</span><span class="str">"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"</span>
+
+    <span class="kw">def</span> <span class="fn">fetch</span>() -> str:
+        <span class="kw">try</span>:
+            raw = gl.nondet.web.<span class="fn">render</span>(url, mode=<span class="str">"text"</span>)
+            <span class="kw">if not</span> raw <span class="kw">or</span> raw.strip() == <span class="str">"null"</span>:
+                <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
+            data = json.<span class="fn">loads</span>(raw)
+            <span class="kw">return</span> json.<span class="fn">dumps</span>({
+                <span class="str">"price"</span>: <span class="fn">float</span>(data[<span class="str">"lastPrice"</span>]),
+                <span class="str">"status"</span>: <span class="str">"ok"</span>
+            }, sort_keys=<span class="acc">True</span>)
+        <span class="kw">except</span> Exception:
+            <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
+
+    fresh = gl.eq_principle.<span class="fn">prompt_comparative</span>(
+        fetch,
+        <span class="str">"They are equivalent if both show an API error, "</span>
+        <span class="str">"or if price values are within 2% and symbol matches."</span>
+    )
+    all_data = json.<span class="fn">loads</span>(self.store)
+    all_data[symbol] = json.<span class="fn">loads</span>(fresh)
+    self.store = json.<span class="fn">dumps</span>(all_data, sort_keys=<span class="acc">True</span>)</code></pre>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">💡 Rule</div>
+    <p>Always use <code>web.render(mode="text")</code>. Never use <code>web.get()</code> with <code>response.body</code>.</p>
+  </div>
+
+  <!-- BUG 02 -->
+  <h3 id="bug-treemap">Bug 02 — TreeMap state does not persist on Studio</h3>
+  <p><span class="badge badge-confirmed">CONFIRMED</span> <code>TreeMap</code> works perfectly in local testing but loses all data after every transaction when deployed to GenLayer Studio.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — wrong ❌</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">class</span> <span class="cls">CryptoOracle</span>(gl.Contract):
+    prices: TreeMap[str, str]  <span class="cm"># State is lost after every transaction on Studio</span></code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — correct ✅ (all 4 contracts use this)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">class</span> <span class="cls">CryptoOracle</span>(gl.Contract):
+    store: str  <span class="cm"># JSON string — persists correctly on Studio</span>
+    pulse: str  <span class="cm"># Freshness / metadata tracking</span>
 
 <span class="kw">def</span> <span class="fn">__init__</span>(self):
-    self.store = <span class="str">"{}"</span>
-    self.pulse = <span class="str">"{}"</span></code></pre>
+    self.store = <span class="str">"{}"</span>  <span class="cm"># Empty JSON object</span>
+    self.pulse = <span class="str">"{}"</span>
 
-  <h3>Bug 03 — sender_address at deploy time</h3>
-  <div class="lbl bad">❌ Incorrect — runtime error on deploy</div>
-  <pre><code><span class="kw">def</span> <span class="fn">__init__</span>(self):
-    self.owner = gl.message.sender_address  <span class="cm"># Runtime error on deploy</span></code></pre>
-  <div class="lbl good">✅ Correct — from MultiKeyVault</div>
-  <pre><code><span class="kw">def</span> <span class="fn">__init__</span>(self, owner_address: str):
+<span class="cm"># Writing state</span>
+all_data[symbol] = json.<span class="fn">loads</span>(fresh)
+self.store = json.<span class="fn">dumps</span>(all_data, sort_keys=<span class="acc">True</span>)  <span class="cm"># sort_keys=True is required</span>
+
+<span class="cm"># Reading state</span>
+all_data = json.<span class="fn">loads</span>(self.store)
+entry = all_data.get(symbol)</code></pre>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">⚠ Always use sort_keys=True</div>
+    <p>Without <code>sort_keys=True</code>, Python dict key ordering is non-deterministic. Two validators can produce different JSON strings from identical data, causing consensus to fail.</p>
+  </div>
+
+  <!-- BUG 03 -->
+  <h3 id="bug-sender">Bug 03 — sender_address causes deploy failure</h3>
+  <p><span class="badge badge-confirmed">CONFIRMED</span> Using <code>gl.message.sender_address</code> inside <code>__init__</code> causes a runtime error at deploy time. The contract will not deploy. The error message is not helpful.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — wrong ❌</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">__init__</span>(self):
+    self.owner = gl.message.sender_address  <span class="cm"># Runtime error — contract won't deploy</span></code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — correct ✅ (from MultiKeyVault)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">__init__</span>(self, owner_address: str):
+    <span class="cm"># Pass your MetaMask wallet address as a parameter when deploying</span>
     assert <span class="fn">is_valid_address</span>(owner_address), <span class="str">"Invalid owner address."</span>
     self.owner           = owner_address
     self.allowed_callers = json.<span class="fn">dumps</span>([owner_address])</code></pre>
-</section>
+  </div>
+
+  <!-- BUG 04 -->
+  <h3 id="bug-nondet">Bug 04 — run_nondet_unsafe fails with web fetching</h3>
+  <p><span class="badge badge-confirmed">CONFIRMED</span> Combining <code>run_nondet_unsafe</code> with any web fetch operation fails at runtime. The error message does not indicate the actual cause.</p>
+
+  <div class="callout callout-danger">
+    <div class="callout-title">🚨 Fix</div>
+    <p>Use <code>gl.eq_principle.prompt_comparative</code> for all operations that fetch web data. Do not use <code>run_nondet_unsafe</code> with web fetches.</p>
+  </div>
+
+  <!-- BUG 05 -->
+  <h3 id="bug-usererror">Bug 05 — gl.vm.UserError in __init__ prevents deploy</h3>
+  <p><span class="badge badge-confirmed">CONFIRMED</span> Raising <code>gl.vm.UserError</code> inside <code>__init__</code> causes the contract deploy to fail entirely.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — wrong ❌</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">__init__</span>(self, rate_limit: int):
+    <span class="kw">if</span> rate_limit <= <span class="num">0</span>:
+        <span class="kw">raise</span> gl.vm.<span class="fn">UserError</span>(<span class="str">"Rate limit must be positive"</span>)  <span class="cm"># Breaks deploy</span></code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — correct ✅</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">__init__</span>(self, rate_limit: str):
+    assert rate_limit.isdigit() <span class="kw">and</span> <span class="fn">int</span>(rate_limit) >= <span class="num">1</span>, <span class="str">"Rate limit must be a positive number."</span>
+    self.rate_limit = rate_limit  <span class="cm"># Note: stored as str, not int</span></code></pre>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">💡 Rule</div>
+    <p>Use <code>assert</code> in <code>__init__</code>. <code>gl.vm.UserError</code> is safe to use in write methods after deployment.</p>
+  </div>
 </div>
 
-<!-- PATTERNS -->
-<div class="sec-wrap">
-<section class="sec fade" id="patterns">
-  <div class="sec-label">// 02 — patterns</div>
-  <div class="sec-title">What actually <span style="color:var(--purple)">works.</span></div>
-  <p class="sec-p">These are the coding patterns that made all 4 contracts work reliably on Studio. Each one was discovered through real development — not theory.</p>
+<!-- ═══════════════════════════════════════════ -->
+<!-- BEST PRACTICES -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="best-practices">
+  <h2>Best Practices</h2>
+  <p class="section-subtitle">These patterns were discovered through real development. Each one solved a real problem across the four contracts.</p>
 
-  <h3>Calibrate your equivalence string</h3>
-  <p>When your contract fetches data, multiple validators independently run the same fetch and compare results. The equivalence string is the rule that tells the AI whether two validators got "the same" answer. It must match how volatile your data actually is — a price that moves 1% per second needs a different rule than a weather temperature.</p>
-  <div class="feat"><div class="feat-title">CryptoOracle — price data, allow 2% variance</div><div class="feat-desc">"They are equivalent if price values are within 2% and symbol matches."</div></div>
-  <div class="feat"><div class="feat-title">WeatherOracle — sensor data, per-field tolerances</div><div class="feat-desc">"They are equivalent if temperature is within 1 degree, humidity within 5%, and wind speed within 3 km/h."</div></div>
-  <div class="feat"><div class="feat-title">WeatherOracle forecast — wider tolerance</div><div class="feat-desc">"They are equivalent if temperatures are within 2 degrees and dates match exactly."</div></div>
-  <div class="feat"><div class="feat-title">SocialOracle trending / latest — count-based match</div><div class="feat-desc">Trending: "at least 3 of the same story titles." Latest (more volatile): "at least 2 of the same story titles or IDs."</div></div>
-  <div class="callout"><strong>Rule:</strong> Too strict → consensus fails on valid data. Too loose → bad data passes. Match the threshold to how much your data can legitimately differ between two validator calls made seconds apart.</div>
+  <!-- EQUIVALENCE -->
+  <h3 id="bp-equivalence">Calibrate your equivalence string</h3>
+  <p>When your contract fetches data, multiple validators independently run the same fetch and compare results. The equivalence string is the rule that tells the AI whether two validators got "the same" answer.</p>
+  <p>It must match how volatile your data actually is — a price that changes every second needs a different rule than a weather temperature that changes every hour.</p>
 
-  <h3>Always use sort_keys=True</h3>
-  <p>Validators independently build Python dicts. Without <code>sort_keys=True</code>, key ordering is non-deterministic and consensus fails on identical data.</p>
-  <pre><code><span class="cm"># Every state write in all 4 contracts</span>
-self.store = json.<span class="fn">dumps</span>(all_data, sort_keys=<span class="acc">True</span>)
-self.pulse = json.<span class="fn">dumps</span>(hb, sort_keys=<span class="acc">True</span>)</code></pre>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Contract & Data</th><th>Equivalence Rule</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>CryptoOracle — live price</td><td class="neutral">"within 2% and symbol matches"</td><td>Prices move between validator calls</td></tr>
+        <tr><td>WeatherOracle — current</td><td class="neutral">"within 1°C, 5% humidity, 3 km/h wind"</td><td>Sensor precision tolerance</td></tr>
+        <tr><td>WeatherOracle — forecast</td><td class="neutral">"within 2°C, dates match exactly"</td><td>Less real-time, wider tolerance</td></tr>
+        <tr><td>SocialOracle — trending</td><td class="neutral">"at least 3 matching story titles"</td><td>Stable feed, high overlap expected</td></tr>
+        <tr><td>SocialOracle — latest</td><td class="neutral">"at least 2 matching titles or IDs"</td><td>Volatile feed, lower threshold</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-  <h3>Booleans and integers are strings</h3>
-  <p>All state fields must be typed as <code>str</code>. From MultiKeyVault:</p>
-  <pre><code><span class="kw">class</span> <span class="fn">MultiKeyVault</span>(gl.Contract):
-    is_paused:   str  <span class="cm"># "true" or "false" — NOT bool</span>
-    rate_limit:  str  <span class="cm"># "100" — NOT int</span>
-    key_version: str  <span class="cm"># "1", "2", "3" — NOT int</span>
+  <div class="callout callout-warning">
+    <div class="callout-title">⚠ Get this wrong and consensus breaks</div>
+    <p>Too strict → consensus fails on valid data. Too loose → wrong data passes. Match the threshold to how much your data can legitimately differ between two validator calls made seconds apart.</p>
+  </div>
 
-<span class="cm"># Comparing</span>
+  <!-- STATE -->
+  <h3 id="bp-state">State management rules</h3>
+  <p>All state fields in a GenLayer contract must be typed as <code>str</code>. This means booleans, integers, and complex data structures all need to be serialized.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — from MultiKeyVault</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">class</span> <span class="cls">MultiKeyVault</span>(gl.Contract):
+    secrets:         str   <span class="cm"># {"name": "value"} — JSON object</span>
+    is_paused:       str   <span class="cm"># "true" or "false" — NOT a bool type</span>
+    rate_limit:      str   <span class="cm"># "100" — NOT an int type</span>
+    key_version:     str   <span class="cm"># "1", "2", "3" — NOT an int type</span>
+    audit_log:       str   <span class="cm"># JSON array</span>
+
+<span class="cm"># Comparing a boolean</span>
 assert self.is_paused == <span class="str">"false"</span>, <span class="str">"Vault is already paused."</span>
-<span class="cm"># Incrementing</span>
-self.key_version = <span class="fn">str</span>(<span class="fn">int</span>(self.key_version) + 1)</code></pre>
 
-  <h3>Module-level functions work — use them</h3>
-  <p>Define shared fetch logic outside the class and call from inside closures. Used across SocialOracle and WeatherOracle.</p>
-  <pre><code><span class="cm"># Outside the class</span>
-<span class="kw">def</span> <span class="fn">_pull_stories</span>(feed: str, limit: int = 10) -> str:
-    ids_raw = gl.nondet.web.<span class="fn">render</span>(
-        <span class="acc">f</span><span class="str">"{HN_API}/{feed}stories.json"</span>, mode=<span class="str">"text"</span>
-    )
-    <span class="cm"># Multiple web.render() calls inside one closure are fine</span>
-    <span class="kw">for</span> story_id <span class="kw">in</span> ids[:limit]:
-        raw = gl.nondet.web.<span class="fn">render</span>(<span class="acc">f</span><span class="str">"{HN_API}/item/{story_id}.json"</span>, mode=<span class="str">"text"</span>)
-    <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"items"</span>: items}, sort_keys=<span class="acc">True</span>)
+<span class="cm"># Incrementing an integer</span>
+self.key_version = <span class="fn">str</span>(<span class="fn">int</span>(self.key_version) + <span class="num">1</span>)
 
-<span class="kw">class</span> <span class="fn">SocialOracle</span>(gl.Contract):
+<span class="cm"># Sentinel value — distinguishes "never fetched" from "fetched but empty"</span>
+self.pulse = <span class="str">"never"</span>  <span class="cm"># Used in SocialOracle</span></code></pre>
+  </div>
+
+  <!-- MODULE FUNCTIONS -->
+  <h3>Use module-level functions for shared fetch logic</h3>
+  <p>You can define helper functions outside your contract class and call them from inside closures. This avoids duplicating fetch logic across multiple write methods.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — from SocialOracle and WeatherOracle</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="cm"># Defined outside the class — works correctly in closures</span>
+<span class="kw">def</span> <span class="fn">_pull_stories</span>(feed: str, limit: int = <span class="num">10</span>) -> str:
+    <span class="kw">try</span>:
+        ids_raw = gl.nondet.web.<span class="fn">render</span>(
+            <span class="acc">f</span><span class="str">"{HN_API}/{feed}stories.json"</span>, mode=<span class="str">"text"</span>
+        )
+        ids = json.<span class="fn">loads</span>(ids_raw)
+        items = []
+        <span class="kw">for</span> story_id <span class="kw">in</span> ids[:limit]:  <span class="cm"># Multiple web.render() calls are fine</span>
+            raw = gl.nondet.web.<span class="fn">render</span>(<span class="acc">f</span><span class="str">"{HN_API}/item/{story_id}.json"</span>, mode=<span class="str">"text"</span>)
+            s = json.<span class="fn">loads</span>(raw)
+            items.append({<span class="str">"title"</span>: s.get(<span class="str">"title"</span>), <span class="str">"score"</span>: s.get(<span class="str">"score"</span>, <span class="num">0</span>)})
+        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"items"</span>: items, <span class="str">"status"</span>: <span class="str">"ok"</span>}, sort_keys=<span class="acc">True</span>)
+    <span class="kw">except</span> Exception:
+        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
+
+<span class="kw">class</span> <span class="cls">SocialOracle</span>(gl.Contract):
     <span class="kw">@gl.public.write</span>
     <span class="kw">def</span> <span class="fn">fetch_trending</span>(self) -> typing.Any:
         <span class="kw">def</span> <span class="fn">fetch</span>() -> str:
-            <span class="kw">return</span> <span class="fn">_pull_stories</span>(<span class="str">"top"</span>, 10)
+            <span class="kw">return</span> <span class="fn">_pull_stories</span>(<span class="str">"top"</span>, <span class="num">10</span>)  <span class="cm"># Call the module-level function</span>
         fresh = gl.eq_principle.<span class="fn">prompt_comparative</span>(fetch, <span class="str">"..."</span>)</code></pre>
+  </div>
 
-  <h3>Closures in loops — a hidden bug risk</h3>
-  <p>Defining a closure inside a <code>for</code> loop captures the variable reference, not its value. Use default argument binding to capture values safely.</p>
-  <div class="lbl bad">⚠️ Risky — variable capture</div>
-  <pre><code><span class="kw">for</span> symbol <span class="kw">in</span> symbols:
+  <!-- CLOSURES -->
+  <h3 id="bp-closures">Closures in loops — a subtle bug risk</h3>
+  <p>When you define a closure inside a <code>for</code> loop, Python captures the variable by reference, not by value. By the time the closure is called, the loop variable may have already changed to the next value.</p>
+  <p>This pattern exists in <code>fetch_prices</code> (CryptoOracle) and <code>fetch_multiple</code> (WeatherOracle). It worked on Studio because <code>prompt_comparative</code> executed immediately — but do not rely on this.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — risky ⚠</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">for</span> symbol <span class="kw">in</span> symbols:
     url = <span class="acc">f</span><span class="str">"https://api.binance.com/...?symbol={symbol}"</span>
     <span class="kw">def</span> <span class="fn">fetch</span>() -> str:
-        <span class="kw">return</span> gl.nondet.web.<span class="fn">render</span>(url, ...)  <span class="cm"># which url?</span></code></pre>
-  <div class="lbl good">✅ Safe — default argument binding</div>
-  <pre><code><span class="kw">for</span> symbol <span class="kw">in</span> symbols:
+        <span class="kw">return</span> gl.nondet.web.<span class="fn">render</span>(url, ...)  <span class="cm"># Which url? The last one in the loop.</span></code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — safe ✅</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">for</span> symbol <span class="kw">in</span> symbols:
     url = <span class="acc">f</span><span class="str">"https://api.binance.com/...?symbol={symbol}"</span>
-    <span class="kw">def</span> <span class="fn">fetch</span>(u=url) -> str:  <span class="cm"># captures value at definition</span>
+    <span class="kw">def</span> <span class="fn">fetch</span>(u=url) -> str:  <span class="cm"># u=url captures the value at definition time</span>
         <span class="kw">return</span> gl.nondet.web.<span class="fn">render</span>(u, ...)</code></pre>
+  </div>
 
-  <h3>Structure AI prompts for specific JSON output</h3>
-  <p>Always define an exact response schema in the prompt. Write equivalence checks that target the key decision only. From WeatherOracle:</p>
-  <pre><code>prompt = (
-    <span class="acc">f</span><span class="str">"Analyze weather for {city}. Respond ONLY with JSON:\n"</span>
-    <span class="str">'{"alert_level": "safe" or "caution" or "danger", '</span>
-    <span class="str">' "reason": "one sentence explanation"}'</span>
-)
-result = gl.nondet.<span class="fn">exec_prompt</span>(prompt)
+  <!-- AI PROMPTS -->
+  <h3 id="bp-ai">Structure AI prompts for specific JSON output</h3>
+  <p>When using <code>exec_prompt</code> for AI analysis, always define an exact JSON schema in your prompt. Free-form responses are hard to parse and hard to write equivalence checks for.</p>
+  <p>Write your equivalence check to validate only the key decision — not the exact wording. Wording can legitimately differ between validators.</p>
 
-gl.eq_principle.<span class="fn">prompt_comparative</span>(
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — from WeatherOracle generate_alert</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">analyze</span>() -> str:
+    prompt = (
+        <span class="acc">f</span><span class="str">"Analyze this weather data for {city} and determine if dangerous:\n\n"</span>
+        <span class="acc">f</span><span class="str">"{json.dumps(weather)}\n\n"</span>
+        <span class="str">"Respond ONLY with JSON:\n"</span>
+        <span class="str">'{"alert_level": "safe" or "caution" or "danger", '</span>
+        <span class="str">' "reason": "one sentence", '  </span>
+        <span class="str">' "recommendation": "one sentence"}'</span>
+    )
+    <span class="kw">return</span> gl.nondet.<span class="fn">exec_prompt</span>(prompt)
+
+alert = gl.eq_principle.<span class="fn">prompt_comparative</span>(
     analyze,
-    <span class="str">"Equivalent if they assign the same alert_level."</span>
-)</code></pre>
-
-  <h3>Always handle errors inside the closure</h3>
-  <pre><code><span class="kw">def</span> <span class="fn">fetch</span>() -> str:
-    <span class="kw">try</span>:
-        raw = gl.nondet.web.<span class="fn">render</span>(url, mode=<span class="str">"text"</span>)
-        <span class="kw">if not</span> raw <span class="kw">or</span> raw.strip() <span class="kw">in</span> [<span class="str">"null"</span>, <span class="str">""</span>]:
-            <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})
-        <span class="cm"># parse and return data</span>
-    <span class="kw">except</span> Exception:
-        <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API down."</span>, <span class="str">"status"</span>: <span class="str">"unavailable"</span>})</code></pre>
-
-  <h3>Use gl.vm.UserError in write methods for preconditions</h3>
-  <pre><code><span class="kw">@gl.public.write</span>
-<span class="kw">def</span> <span class="fn">generate_briefing</span>(self) -> typing.Any:
-    data = json.<span class="fn">loads</span>(self.store)
-    <span class="kw">if</span> <span class="str">"trending"</span> <span class="kw">not in</span> data:
-        <span class="kw">raise</span> gl.vm.<span class="fn">UserError</span>(<span class="str">"No stories cached. Call fetch_trending first."</span>)</code></pre>
-
-  <h3>Only use public APIs</h3>
-  <p>Validators need to independently replicate every web call. Auth-required APIs cannot reach consensus.</p>
-  <div class="feat"><div class="feat-title">✅ Compatible public APIs</div><div class="feat-desc">Binance public ticker · Open-Meteo · Hacker News Firebase · CoinGecko public · Any fully public REST API</div></div>
-  <div class="feat red"><div class="feat-title">❌ Incompatible APIs</div><div class="feat-desc">APIs requiring OAuth tokens · API keys in headers · HMAC request signing · Login-protected endpoints</div></div>
-
-  <h3>Use sentinel values for freshness tracking</h3>
-  <pre><code><span class="cm"># Dict-like state</span>
-self.pulse = <span class="str">"{}"</span>
-
-<span class="cm"># To distinguish "never fetched" from "fetched but empty" — used in SocialOracle</span>
-self.pulse = <span class="str">"never"</span>
-
-<span class="kw">if</span> self.pulse == <span class="str">"never"</span>:
-    <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"fresh"</span>: False, <span class="str">"reason"</span>: <span class="str">"Cache never populated."</span>})</code></pre>
-</section>
+    <span class="str">"Equivalent if they assign the same alert_level."</span>  <span class="cm"># Key decision only</span>
+)
+data[city][<span class="str">"alert"</span>] = json.<span class="fn">loads</span>(alert)</code></pre>
+  </div>
 </div>
 
-<!-- REFERENCE TABLE -->
-<div class="sec-wrap">
-<section class="sec fade" id="reference">
-  <div class="sec-label">// 03 — quick reference</div>
-  <div class="sec-title">The cheat <span style="color:var(--purple)">sheet.</span></div>
-  <p class="sec-p">Every decision in one table. Save this.</p>
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECURITY -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="security">
+  <h2>Security</h2>
+  <p class="section-subtitle">Security patterns discovered while building MultiKeyVault — a multi-secret vault with rate limiting, whitelist control, and emergency wipe.</p>
+
+  <h3 id="sec-access">Access control</h3>
+  <p>Because <code>gl.message.sender_address</code> cannot be used in <code>__init__</code>, ownership must be established via a constructor parameter. Always validate the address format before storing it.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — from MultiKeyVault</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">is_valid_address</span>(address: str) -> bool:
+    <span class="kw">if not</span> address: <span class="kw">return</span> False
+    <span class="kw">if not</span> address.startswith(<span class="str">"0x"</span>): <span class="kw">return</span> False
+    <span class="kw">if</span> <span class="fn">len</span>(address) != <span class="num">42</span>: <span class="kw">return</span> False
+    valid_chars = <span class="str">"0123456789abcdefABCDEF"</span>
+    <span class="kw">for</span> char <span class="kw">in</span> address[<span class="num">2</span>:]:
+        <span class="kw">if</span> char <span class="kw">not in</span> valid_chars: <span class="kw">return</span> False
+    <span class="kw">return</span> True
+
+<span class="kw">def</span> <span class="fn">__init__</span>(self, owner_address: str):
+    assert <span class="fn">is_valid_address</span>(owner_address), <span class="str">"Invalid owner address."</span>
+    self.owner           = owner_address
+    self.allowed_callers = json.<span class="fn">dumps</span>([owner_address])
+
+<span class="cm"># Check ownership in every write method</span>
+<span class="kw">def</span> <span class="fn">_is_owner</span>(self, address: str) -> bool:
+    <span class="kw">return</span> address == self.owner
+
+<span class="kw">@gl.public.write</span>
+<span class="kw">def</span> <span class="fn">add_key</span>(self, name: str, value: str, owner_address: str) -> typing.Any:
+    assert self.<span class="fn">_is_owner</span>(owner_address), <span class="str">"Access denied. Only the owner can add keys."</span></code></pre>
+  </div>
+
+  <h3 id="sec-vault">Secret management</h3>
+  <p>MultiKeyVault stores API keys on-chain and exposes them only at fetch time by appending them directly to the URL. Keys are never returned in read methods.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — safe API key usage</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">@gl.public.write</span>
+<span class="kw">def</span> <span class="fn">fetch_with_key</span>(self, key_name: str, url: str) -> typing.Any:
+    secrets = json.<span class="fn">loads</span>(self.secrets)
+    secret  = secrets[key_name]  <span class="cm"># Retrieved but never returned to caller</span>
+
+    <span class="kw">def</span> <span class="fn">fetch</span>() -> str:
+        <span class="kw">try</span>:
+            <span class="cm"># Key appended to URL — never exposed in response</span>
+            raw  = gl.nondet.web.<span class="fn">render</span>(url + secret, mode=<span class="str">"text"</span>)
+            data = json.<span class="fn">loads</span>(raw)
+            <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"status"</span>: <span class="str">"ok"</span>, <span class="str">"response"</span>: data})
+        <span class="kw">except</span> Exception:
+            <span class="kw">return</span> json.<span class="fn">dumps</span>({<span class="str">"error"</span>: <span class="str">"API call failed."</span>, <span class="str">"status"</span>: <span class="str">"error"</span>})
+
+    fresh = gl.eq_principle.<span class="fn">prompt_comparative</span>(fetch, <span class="str">"..."</span>)
+    self.last_response = fresh  <span class="cm"># Response stored, key is not in response</span></code></pre>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">⚠ This only works for URL parameter APIs</div>
+    <p>This pattern works only for APIs that accept the key as a URL parameter — not APIs requiring the key in request headers.</p>
+  </div>
+
+  <h3>Rate limiting</h3>
+  <p>MultiKeyVault implements per-key rate limiting at the contract level. This prevents any single key from being overused before the owner can reset the count.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — rate limit check</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code>counts = json.<span class="fn">loads</span>(self.call_counts)
+count  = counts.get(key_name, <span class="num">0</span>)
+limit  = <span class="fn">int</span>(self.rate_limit)
+
+<span class="kw">if</span> count >= limit:
+    self.last_response = json.<span class="fn">dumps</span>({
+        <span class="str">"error"</span>:  <span class="str">"Rate limit reached for '"</span> + key_name + <span class="str">"'."</span>,
+        <span class="str">"status"</span>: <span class="str">"rate_limited"</span>
+    })
+    <span class="kw">return</span>
+
+<span class="cm"># Proceed with fetch, then increment count</span>
+counts[key_name]     = count + <span class="num">1</span>
+self.call_counts     = json.<span class="fn">dumps</span>(counts, sort_keys=<span class="acc">True</span>)</code></pre>
+  </div>
+
+  <h3>Emergency wipe</h3>
+  <p>MultiKeyVault includes an emergency wipe function that clears all secrets and locks the vault in a single transaction. Useful if a key is compromised.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — emergency wipe</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">@gl.public.write</span>
+<span class="kw">def</span> <span class="fn">emergency_wipe</span>(self, owner_address: str) -> typing.Any:
+    assert self.<span class="fn">_is_owner</span>(owner_address), <span class="str">"Access denied."</span>
+    self.secrets     = <span class="str">"{}"</span>          <span class="cm"># Clear all keys</span>
+    self.call_counts = <span class="str">"{}"</span>          <span class="cm"># Clear all counters</span>
+    self.is_paused   = <span class="str">"true"</span>        <span class="cm"># Lock vault</span>
+    self.key_version = <span class="fn">str</span>(<span class="fn">int</span>(self.key_version) + <span class="num">1</span>)
+    self.<span class="fn">_log_call</span>(<span class="str">"EMERGENCY_WIPE"</span>, <span class="str">"all keys cleared and vault locked"</span>)</code></pre>
+  </div>
+
+  <h3 id="sec-apis">Audit logging</h3>
+  <p>MultiKeyVault logs every significant action with the action type and detail. The log is capped at 50 entries to manage state size.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">python — audit log pattern</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code><span class="kw">def</span> <span class="fn">_log_call</span>(self, action: str, detail: str) -> None:
+    log = json.<span class="fn">loads</span>(self.audit_log)
+    log.append({<span class="str">"action"</span>: action, <span class="str">"detail"</span>: detail})
+    <span class="kw">if</span> <span class="fn">len</span>(log) > <span class="num">50</span>:
+        log = log[-<span class="num">50</span>:]  <span class="cm"># Keep only the latest 50 entries</span>
+    self.audit_log = json.<span class="fn">dumps</span>(log)</code></pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- STUDIO TIPS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="studio-tips">
+  <h2>Studio Tips</h2>
+  <p class="section-subtitle">Practical tips for working with GenLayer Studio based on real experience deploying and testing all four contracts.</p>
+
+  <h3>Empty methods panel = schema error</h3>
+  <p>If your contract deploys but the methods panel is empty, there is a schema error in your contract — usually a type annotation issue. Check all method signatures and state field declarations carefully.</p>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">💡 Debug tip</div>
+    <p>Deploy with a minimal <code>__init__</code> first (just <code>pass</code>). If the methods panel loads, your schema is valid. Then add logic incrementally.</p>
+  </div>
+
+  <h3>Errors all look the same</h3>
+  <p>Studio does not distinguish between schema errors and runtime errors — both produce similar-looking failure states. Use this to tell them apart:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symptom</th><th>Likely Cause</th></tr></thead>
+      <tbody>
+        <tr><td>Error appears before any execution</td><td>Schema error (type annotation issue)</td></tr>
+        <tr><td>Empty methods panel after deploy</td><td>Schema error in contract definition</td></tr>
+        <tr><td>Error appears mid-execution</td><td>Runtime error</td></tr>
+        <tr><td>Transaction starts then fails</td><td>Runtime error or <code>gl.vm.UserError</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Write methods take 30–90 seconds</h3>
+  <p>Write methods go through validator consensus before finalizing. This is normal. Always wait for the "Finalized" status before calling read methods to check the result.</p>
+
+  <h3>Test in this order</h3>
+  <ol style="color:var(--text-muted);padding-left:1.5rem;margin-bottom:1rem;">
+    <li style="margin-bottom:0.4rem;">Deploy the contract</li>
+    <li style="margin-bottom:0.4rem;">Verify the methods panel shows all your methods</li>
+    <li style="margin-bottom:0.4rem;">Call a simple read method to confirm the contract is responsive</li>
+    <li style="margin-bottom:0.4rem;">Call the write method that populates state</li>
+    <li style="margin-bottom:0.4rem;">Wait for finalization (30–90 seconds)</li>
+    <li>Call read methods to verify stored data</li>
+  </ol>
+
+  <h3>Leader rotation is normal</h3>
+  <p>You may see more than 5 validators appearing in the transaction log. This is expected behavior — it reflects cumulative leaders across multiple consensus rounds, not the validator set size. Do not debug this.</p>
+
+  <h3>Private APIs will always fail consensus</h3>
+  <p>If your API requires authentication (OAuth, API keys in headers, HMAC signing), validators cannot independently replicate the call, so consensus will fail. Use only fully public endpoints.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- KNOWN LIMITATIONS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="limitations">
+  <h2>Known Limitations</h2>
+  <p>These are confirmed platform constraints of GenLayer Studio. They are not bugs in your contract code. If you hit one of these, use the documented workaround.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limitation</th><th>Impact</th><th>Workaround</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-confirmed">CONFIRMED</span> <code>web.get()</code> + <code>response.body</code> returns empty</td><td>Silent data loss</td><td>Use <code>web.render()</code></td></tr>
+        <tr><td><span class="badge badge-confirmed">CONFIRMED</span> <code>TreeMap</code> state does not persist on Studio</td><td>State lost after every transaction</td><td>Use <code>str</code> + JSON serialization</td></tr>
+        <tr><td><span class="badge badge-confirmed">CONFIRMED</span> <code>run_nondet_unsafe</code> fails with web fetching</td><td>Cannot combine with web calls</td><td>Use <code>prompt_comparative</code></td></tr>
+        <tr><td><span class="badge badge-confirmed">CONFIRMED</span> Private APIs incompatible with consensus</td><td>Validators can't replicate auth-required calls</td><td>Use public APIs only</td></tr>
+        <tr><td><span class="badge badge-confirmed">CONFIRMED</span> <code>gl.message.sender_address</code> in <code>__init__</code> fails</td><td>Contract won't deploy</td><td>Pass as constructor parameter</td></tr>
+        <tr><td><span class="badge badge-note">NOTE</span> Leader rotation shows more than 5 validators</td><td>Looks alarming in transaction logs</td><td>Normal — not a bug</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- QUICK REFERENCE -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="doc-section" id="reference">
+  <h2>Quick Reference</h2>
+  <p>Every decision in one table.</p>
+
   <div class="table-wrap">
     <table>
       <thead><tr><th>Situation</th><th>Use This</th><th>Not This</th></tr></thead>
       <tbody>
-        <tr><td>Fetch web data</td><td class="g">web.render(mode="text")</td><td class="b">web.get() + response.body</td></tr>
-        <tr><td>Persistent state</td><td class="g">str fields + json.dumps</td><td class="b">TreeMap</td></tr>
-        <tr><td>JSON serialization</td><td class="g">json.dumps(..., sort_keys=True)</td><td class="b">json.dumps() without sort</td></tr>
-        <tr><td>Web + AI consensus</td><td class="g">prompt_comparative</td><td class="b">run_nondet_unsafe</td></tr>
-        <tr><td>Booleans in state</td><td class="g">"true" / "false" strings</td><td class="b">bool type</td></tr>
-        <tr><td>Integers in state</td><td class="g">str(int) — "100", "1"</td><td class="b">int type</td></tr>
-        <tr><td>Get caller address</td><td class="g">Constructor parameter</td><td class="b">sender_address in __init__</td></tr>
-        <tr><td>Validate in constructor</td><td class="g">assert</td><td class="b">gl.vm.UserError</td></tr>
-        <tr><td>Validate in write methods</td><td class="g">gl.vm.UserError or assert</td><td class="b">—</td></tr>
-        <tr><td>Shared fetch logic</td><td class="g">Module-level function</td><td class="b">Duplicated closures</td></tr>
-        <tr><td>AI output format</td><td class="g">Specific JSON schema in prompt</td><td class="b">Free-form text</td></tr>
-        <tr><td>Closures in loops</td><td class="g">Default argument binding (u=url)</td><td class="b">Bare variable capture</td></tr>
+        <tr><td>Fetch web data</td><td class="good">web.render(mode="text")</td><td class="bad">web.get() + response.body</td></tr>
+        <tr><td>Persistent state</td><td class="good">str fields + json.dumps</td><td class="bad">TreeMap</td></tr>
+        <tr><td>JSON serialization</td><td class="good">json.dumps(..., sort_keys=True)</td><td class="bad">json.dumps() without sort</td></tr>
+        <tr><td>Web + AI consensus</td><td class="good">prompt_comparative</td><td class="bad">run_nondet_unsafe</td></tr>
+        <tr><td>Booleans in state</td><td class="good">"true" / "false" strings</td><td class="bad">bool type</td></tr>
+        <tr><td>Integers in state</td><td class="good">str(int) — "100", "1"</td><td class="bad">int type</td></tr>
+        <tr><td>Get caller address</td><td class="good">Constructor parameter</td><td class="bad">sender_address in __init__</td></tr>
+        <tr><td>Validate in constructor</td><td class="good">assert</td><td class="bad">gl.vm.UserError</td></tr>
+        <tr><td>Validate in write methods</td><td class="good">gl.vm.UserError or assert</td><td class="neutral">—</td></tr>
+        <tr><td>Shared fetch logic</td><td class="good">Module-level function</td><td class="bad">Duplicated closures</td></tr>
+        <tr><td>AI output format</td><td class="good">Specific JSON schema in prompt</td><td class="bad">Free-form text</td></tr>
+        <tr><td>Closures in loops</td><td class="good">Default argument binding (u=url)</td><td class="bad">Bare variable capture</td></tr>
       </tbody>
     </table>
   </div>
-</section>
-</div>
 
-<!-- KNOWN LIMITS -->
-<div class="sec-wrap">
-<section class="sec fade" id="limits">
-  <div class="sec-label">// 04 — known limitations</div>
-  <div class="sec-title">Platform <span style="color:var(--red)">limits.</span></div>
-  <p class="sec-p">These are confirmed issues with GenLayer Studio itself — not mistakes in your contract code. If you hit one of these, the workaround is documented below. Don't spend hours debugging code that isn't broken.</p>
-  <ul class="limit-list">
-    <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>web.get() + response.body returns empty</strong><small>Silent data loss. No error thrown. Workaround: use web.render() exclusively.</small></div></li>
-    <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>TreeMap state does not persist on Studio</strong><small>State lost after every transaction. Workaround: use str fields with JSON serialization.</small></div></li>
-    <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>run_nondet_unsafe fails with web fetching</strong><small>Cannot combine unsafe nondeterminism with web calls. Workaround: use prompt_comparative.</small></div></li>
-    <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>Private APIs incompatible with consensus</strong><small>Validators can't replicate auth-required calls independently. Workaround: public APIs only.</small></div></li>
-    <li><span class="lim-badge">CONFIRMED</span><div class="lim-text"><strong>gl.message.sender_address in __init__ fails</strong><small>Causes runtime error at deploy time. Workaround: pass caller address as constructor parameter.</small></div></li>
-    <li><span class="lim-badge note">NOTE</span><div class="lim-text"><strong>Leader rotation shows more than 5 validators</strong><small>Normal behavior — reflects cumulative leaders across consensus rounds, not the validator set size.</small></div></li>
-  </ul>
-</section>
+  <!-- WHAT'S NEXT -->
+  <div class="what-next">
+    <div class="what-next-title">What's next?</div>
+    <div class="what-next-links">
+      <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank">↗ View contract source code</a>
+      <a href="https://github.com/Manablaq/genlayer-contracts/blob/main/BEST_PRACTICES.md" target="_blank">↗ Full best practices doc</a>
+      <a href="https://dev.to/albert__crypt/genlayer-studio-7-things-that-break-and-how-to-fix-them-ni4" target="_blank">↗ DEV.to blog post</a>
+      <a href="https://studio.genlayer.com" target="_blank">↗ Open GenLayer Studio</a>
+    </div>
+  </div>
 </div>
 
 <!-- FOOTER -->
-<div class="foot-wrap">
-<footer>
-  <div class="foot-left">
-    Built by <a href="https://github.com/Manablaq">ALBERT</a><br>
-    GenLayer Builder Program — Tools &amp; Infrastructure<br>
-    <span style="color:#333;">github.com/Manablaq/genlayer-contracts</span>
+<div class="doc-footer">
+  <div class="doc-footer-left">
+    Built by <a href="https://github.com/Manablaq">ALBERT</a> · GenLayer Builder Program — Tools & Infrastructure<br>
+    <span style="color:var(--text-dim);">github.com/Manablaq/genlayer-contracts</span>
   </div>
-  <div class="foot-links">
-    <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank">↗ GitHub Repo</a>
-    <a href="https://github.com/Manablaq/genlayer-contracts/blob/main/BEST_PRACTICES.md" target="_blank">↗ Full Docs</a>
-    <a href="https://dev.to/albert__crypt/genlayer-studio-7-things-that-break-and-how-to-fix-them-ni4" target="_blank">↗ DEV.to Post</a>
+  <div class="doc-footer-links">
+    <a href="https://github.com/Manablaq/genlayer-contracts" target="_blank">GitHub Repo</a>
+    <a href="https://github.com/Manablaq/genlayer-contracts/blob/main/BEST_PRACTICES.md" target="_blank">Full Docs</a>
+    <a href="https://dev.to/albert__crypt/genlayer-studio-7-things-that-break-and-how-to-fix-them-ni4" target="_blank">DEV.to Post</a>
   </div>
-</footer>
+</div>
+
+</main>
 </div>
 
 <script>
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); } });
-  }, { threshold: 0 });
-  document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+// Copy button
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
 
-  // Fallback: show all fades after 1 second in case observer fails
-  setTimeout(() => {
-    document.querySelectorAll('.fade').forEach(el => el.classList.add('in'));
-  }, 1000);
+// Sidebar scroll-spy
+const sections = document.querySelectorAll('[id]');
+const links = document.querySelectorAll('.sidebar-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      links.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+
+// Mobile: close sidebar on link click
+document.querySelectorAll('.sidebar-link').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.remove('open');
+  });
+});
+
+// Fallback: show content on mobile
+setTimeout(() => {
+  document.querySelectorAll('.fade').forEach(el => el.classList.add('in'));
+}, 500);
 </script>
 </body>
 </html>
